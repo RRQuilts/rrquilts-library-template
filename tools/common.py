@@ -5,7 +5,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SIZES = (256, 512)  # build.py --print adds 1024
 FORMATS_URL = 'https://ragingroosevelt.github.io/RRQuilts/schemas/formats.json'
-TEMPLATE_RAW = 'https://raw.githubusercontent.com/RagingRoosevelt/rrquilts-library-template/main/'
+TEMPLATE_RAW = 'https://raw.githubusercontent.com/RRQuilts/rrquilts-library-template/main/'
 # Format versions these tools write. `tools/upgrade.py` moves a library to newer ones.
 FORMATS = {'rrqlib': 3, 'rrqlib-index': 1}
 
