@@ -11,6 +11,10 @@ from pathlib import Path
 from common import ROOT, read_json
 
 SITE = ROOT / 'site'
+# Material "link" icon, for the Copy link buttons.
+LINK_ICON = ('<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M3.9 12c0-1.71 '
+             '1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 '
+             '0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>')
 APP = 'https://ragingroosevelt.github.io/RRQuilts/'
 
 
@@ -107,7 +111,7 @@ def main():
         who = ' · '.join(x for x in [doc.get('author', {}).get('name'), p.get('date') if p.get('date') != '??-??' else ''] if x)
         sections.append(
             f'<section id="{esc(p["id"])}"><div class="head"><h2>{esc(p["name"])} <span>{len(tiles)}</span></h2>'
-            f'<button type="button" class="link" data-act="copy">Copy link</button>'
+            f'<button type="button" class="link icon" data-act="copy" aria-label="Copy link" title="Copy link">{LINK_ICON}</button>'
             f'<button type="button" class="link share" data-act="share" hidden>Share</button></div>'
             f'<p class="by">{esc(who)}</p><div class="grid">{"".join(tiles)}</div></section>')
     nav = ''.join(f'<a href="#{esc(p["id"])}">{esc(p["name"])}</a>'
@@ -144,6 +148,7 @@ section .head {{ display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px
   border-top: 1px solid var(--line); padding-top: 16px; }}
 section h2 {{ margin: 0 auto 2px 0; }}
 button.link {{ font-size: 13px; padding: 3px 10px; }}
+button.icon {{ display: inline-flex; align-items: center; padding: 3px 6px; }}
 section h2 span {{ color: var(--muted); font-weight: normal; font-size: .8em; }}
 .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; }}
 figure {{ margin: 0; }} img, .sw {{ width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; display: block; border: 1px solid var(--line); }}
@@ -159,6 +164,10 @@ dialog::backdrop {{ background: rgba(0, 0, 0, .88); }}
   background: rgba(0, 0, 0, .5); color: #fff; border: none; border-radius: 50%; }}
 .prev {{ left: 12px; }} .next {{ right: 12px; }}
 .close {{ position: fixed; top: 12px; right: 12px; background: rgba(0, 0, 0, .5); color: #fff; border: none; font-size: 20px; }}
+#toast {{ position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 12px); opacity: 0; pointer-events: none;
+  background: #323232; color: #fff; padding: 10px 18px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0, 0, 0, .3);
+  transition: opacity .2s, transform .2s; }}
+#toast.on {{ opacity: 1; transform: translate(-50%, 0); }}
 @media (max-width: 700px) {{
   body {{ display: flex; flex-direction: column; }}
   aside {{ max-height: 30vh; border-right: none; border-bottom: 1px solid var(--line); flex: none; }}
@@ -172,6 +181,7 @@ dialog::backdrop {{ background: rgba(0, 0, 0, .88); }}
 <p>{esc(index.get("description", ""))} {len(index["packs"])} packs, {total} colors and fabrics.</p>
 {how_to(repo, index)}</div>
 {"".join(sections)}</main>
+<div id="toast" role="status" aria-live="polite"></div>
 <dialog id="carousel" aria-label="Fabric images">
 <div class="view"><img alt=""><p><span class="name"></span><br><small class="meta"></small></p></div>
 <button type="button" class="nav prev" aria-label="Previous">‹</button>
@@ -179,9 +189,16 @@ dialog::backdrop {{ background: rgba(0, 0, 0, .88); }}
 <button type="button" class="close" aria-label="Close">✕</button>
 </dialog>
 <script>
-/** Copy `text`, and say so on the button for a moment. */
-function copyText(text, b) {{
-  const label = b.textContent;
+const toastEl = document.getElementById('toast');
+let toastTimer;
+function toast(message) {{
+  toastEl.textContent = message;
+  toastEl.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('on'), 2000);
+}}
+/** Copy `text`, then say so in a toast. */
+function copyText(text, message) {{
   (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject())
     .catch(() => {{
       const t = Object.assign(document.createElement('textarea'), {{ value: text }});
@@ -190,11 +207,11 @@ function copyText(text, b) {{
       document.execCommand('copy');
       t.remove();
     }})
-    .finally(() => {{ b.textContent = 'Copied'; setTimeout(() => (b.textContent = label), 1500); }});
+    .finally(() => toast(message));
 }}
 function copyAddress(b) {{
   b.previousElementSibling.select();
-  copyText(b.previousElementSibling.value, b);
+  copyText(b.previousElementSibling.value, 'Address copied');
 }}
 // Each collection: copy its link, or share it (where the system share sheet exists).
 const pageUrl = location.href.split('#')[0];
@@ -204,7 +221,7 @@ document.querySelector('main').addEventListener('click', (e) => {{
   if (!b) return;
   const s = b.closest('section');
   const url = `${{pageUrl}}#${{s.id}}`;
-  if (b.dataset.act === 'copy') copyText(url, b);
+  if (b.dataset.act === 'copy') copyText(url, 'Link copied');
   else navigator.share({{ title: s.querySelector('h2').firstChild.textContent.trim(), url }}).catch(() => {{}});
 }});
 // The address follows the collection being looked at (replaced, so Back isn't filled with them),
