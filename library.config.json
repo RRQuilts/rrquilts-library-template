@@ -1,0 +1,8 @@
+{
+  "id": "your-name-fabrics",
+  "name": "Your Library Name",
+  "description": "What this library holds.",
+  "author": { "name": "Your Name", "url": "https://example.org" },
+  "license": "CC-BY-SA-4.0",
+  "default_size_inches": 8
+}

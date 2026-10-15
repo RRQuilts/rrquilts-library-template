@@ -1,0 +1,25 @@
+name: RRQuilts format check
+on:
+  schedule:
+    - cron: '0 9 * * 1' # Mondays
+  workflow_dispatch:
+permissions:
+  issues: write
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - id: check
+        run: |
+          if ! out=$(uv run tools/upgrade.py --check); then
+            echo "message=$out" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.check.outputs.message
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="RRQuilts library format update available"
+          gh issue list --search "$title in:title" --state open --json number --jq length | grep -q '^0$' &&
+            gh issue create --title "$title" --body "${{ steps.check.outputs.message }}" || true

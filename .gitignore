@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+dist/
+# Source images: commit them only if you want them in the repository (they can be large).
+# sources/**/*.jpg
+# sources/**/*.png

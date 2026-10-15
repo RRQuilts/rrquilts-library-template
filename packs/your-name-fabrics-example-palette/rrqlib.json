@@ -1,0 +1,136 @@
+{
+ "format": "rrqlib",
+ "version": 2,
+ "units": "in",
+ "kind": "pack",
+ "id": "your-name-fabrics-example-palette",
+ "revision": 1,
+ "name": "Example Palette",
+ "description": "What this library holds.",
+ "author": {
+  "name": "Your Name"
+ },
+ "license": "CC-BY-SA-4.0",
+ "categories": [],
+ "library": {
+  "id": "your-name-fabrics",
+  "name": "Your Library Name"
+ },
+ "items": [
+  {
+   "type": "colors",
+   "data": {
+    "id": "your-name-fabrics.example-palette",
+    "author": "Your Name",
+    "license": "CC-BY-SA-4.0",
+    "notecard": {
+     "name": "Example Palette",
+     "tags": [
+      "example"
+     ]
+    },
+    "colors": [],
+    "fabrics": [
+     {
+      "id": "your-name-fabrics.blue-dots",
+      "notecard": {
+       "name": "blue dots"
+      },
+      "author": "Your Name",
+      "license": "CC-BY-SA-4.0",
+      "image": {
+       "sha256": "40185caa1c49cf163f3f2305a6b558dbbe73c93126e5700b60d71af80ba24617",
+       "type": "image/webp",
+       "width": 512,
+       "height": 512
+      },
+      "size": [
+       8,
+       8.0
+      ],
+      "average": [
+       93,
+       127,
+       178
+      ],
+      "sizes": [
+       {
+        "px": 256,
+        "sha256": "b0df0c2dfc199b6ab9451640f6ad35be50621832bb6a020e000d7f117379d33b",
+        "type": "image/webp",
+        "width": 256,
+        "height": 256,
+        "path": "256/blue-dots.webp"
+       },
+       {
+        "px": 512,
+        "sha256": "40185caa1c49cf163f3f2305a6b558dbbe73c93126e5700b60d71af80ba24617",
+        "type": "image/webp",
+        "width": 512,
+        "height": 512,
+        "path": "512/blue-dots.webp"
+       },
+       {
+        "px": 600,
+        "sha256": "77f07b719e584b4a2fb9145c38492bb330eff6fc10a73424aaf299956ff788c8",
+        "type": "image/webp",
+        "width": 600,
+        "height": 600,
+        "path": "600/blue-dots.webp"
+       }
+      ]
+     },
+     {
+      "id": "your-name-fabrics.red-dots",
+      "notecard": {
+       "name": "red dots"
+      },
+      "author": "Your Name",
+      "license": "CC-BY-SA-4.0",
+      "image": {
+       "sha256": "2f72137183afa88d03c8d463f6d0eeea1e6c4ec2bac7b091ae7cb069dd886674",
+       "type": "image/webp",
+       "width": 512,
+       "height": 512
+      },
+      "size": [
+       8,
+       8.0
+      ],
+      "average": [
+       197,
+       84,
+       77
+      ],
+      "sizes": [
+       {
+        "px": 256,
+        "sha256": "4a429bc4fd3f84698ee0beb9182d1b8ddbcb4a8d9f3c2c4a1f516d0a1af908a3",
+        "type": "image/webp",
+        "width": 256,
+        "height": 256,
+        "path": "256/red-dots.webp"
+       },
+       {
+        "px": 512,
+        "sha256": "2f72137183afa88d03c8d463f6d0eeea1e6c4ec2bac7b091ae7cb069dd886674",
+        "type": "image/webp",
+        "width": 512,
+        "height": 512,
+        "path": "512/red-dots.webp"
+       },
+       {
+        "px": 600,
+        "sha256": "52ddec584633e09ab9b2789a2e69947ef4e34371e2ca36ba009aa51dfe3449a7",
+        "type": "image/webp",
+        "width": 600,
+        "height": 600,
+        "path": "600/red-dots.webp"
+       }
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

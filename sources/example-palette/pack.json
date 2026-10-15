@@ -1,0 +1,7 @@
+{
+  "name": "Example Palette",
+  "designer": "Your Name",
+  "tags": ["example"],
+  "size_inches": 8,
+  "crop": true
+}
