@@ -31,7 +31,16 @@ def repo_url():
     return f'https://github.com/{m.group(1)}' if m else None
 
 
-def how_to(repo):
+def file_mb(index, *px):
+    """About how big a release file is: the index, pack documents and images of sizes `px`, in MB
+    rounded to 10."""
+    n = (ROOT / 'library.json').stat().st_size + sum(
+        (ROOT / p['path']).stat().st_size + sum(p.get('sizes', {}).get(str(x), 0) for x in px)
+        for p in index['packs'])
+    return max(10, round(n / 1e7) * 10)
+
+
+def how_to(repo, index):
     """Brief instructions for adding the library to RRQuilts."""
     if not repo:
         return (f'<p>Add it in <a href="{APP}">RRQuilts</a>: <b>Libraries › Add from the web…</b> with this '
@@ -52,7 +61,8 @@ Or <a href="{APP}libraries?add={quote(repo, safe='')}">follow this link</a> to a
 <li><b>Or import it</b> as a file.
 <ol type="a">
 <li>Download a file from the <a href="{esc(repo)}/releases/latest">latest release</a>: <code>-256</code> is
-smaller, <code>-512</code> is larger with sharper images.</li>
+smaller (about {file_mb(index, 256)} MB), <code>-512</code> is larger with sharper images (about
+{file_mb(index, 256, 512)} MB).</li>
 <li>In RRQuilts, open <b>Libraries › Import</b> and choose the file.</li>
 </ol></li>
 </ol></div>'''
@@ -150,7 +160,7 @@ dialog::backdrop {{ background: rgba(0, 0, 0, .88); }}
 <main>
 <div class="intro"><h1>{esc(index["name"])}</h1>
 <p>{esc(index.get("description", ""))} {len(index["packs"])} packs, {total} colors and fabrics.</p>
-{how_to(repo)}</div>
+{how_to(repo, index)}</div>
 {"".join(sections)}</main>
 <dialog id="carousel" aria-label="Fabric images">
 <div class="view"><img alt=""><p><span class="name"></span><br><small class="meta"></small></p></div>
