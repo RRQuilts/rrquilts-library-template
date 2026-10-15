@@ -74,3 +74,11 @@ packs/<pack>/<size>/    its images (built)
 tools/                  build, validate, release, upgrade
 .github/workflows/      validate on push, release on tag, weekly format check
 ```
+
+## Gallery site
+
+Every push to `main` builds a page showing all the library's fabrics and colors (`tools/site.py`,
+workflow **Gallery site**) and publishes it with GitHub Pages. Turn it on once: **Settings › Pages ›
+Source: GitHub Actions**. Preview it locally with `uv run tools/site.py` and open `site/index.html`.
+The page is public like the repository, so only publish images you're allowed to share.
+
