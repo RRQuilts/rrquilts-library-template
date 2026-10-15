@@ -29,7 +29,7 @@ folder in `sources/` becomes a **pack** (one palette) that people can switch on 
    This writes `library.json` and `packs/<pack>/` with each image as WebP at 256 and 512 px
    (never enlarged), plus each fabric's average color.
 6. Commit everything except `dist/`, push, and tag a release: `git tag v1 && git push --tags`. The
-   **Release** action builds `.rrqlib` files for the whole library and for each pack, at each size:
+   **Release** action builds a `.rrqlib` file of the whole library at each size:
    `-256` (Light) and `-512` (Standard). For sharper printouts, build with `--print` to add 1024 px
    images and a `-1024` file; it roughly triples the library's size.
 
