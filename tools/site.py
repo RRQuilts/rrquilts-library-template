@@ -48,7 +48,9 @@ def how_to(repo, index):
     return f'''<div class="how">
 <h2>Use it in <a href="{APP}">RRQuilts</a></h2>
 <ol>
-<li><b>Add this library</b> to get new collections as they're added.
+<li><b>Follow <a href="{APP}libraries?add={quote(repo, safe='')}">this link</a></b> to add this library
+in RRQuilts, then enable the collections you want. New collections reach you as they're added.</li>
+<li><b>Or add it by hand.</b>
 <ol type="a">
 <li>Copy this address:
 <div class="copy"><input readonly value="{esc(repo)}" aria-label="Library address"
@@ -56,8 +58,7 @@ onfocus="this.select()"><button type="button" onclick="copyAddress(this)">Copy</
 <li>In RRQuilts, open <b>Libraries › Add from the web…</b></li>
 <li>Paste the address and click <b>Connect</b>.</li>
 <li>Enable the collections you want.</li>
-</ol>
-Or <a href="{APP}libraries?add={quote(repo, safe='')}">follow this link</a> to add it directly.</li>
+</ol></li>
 <li><b>Or import it</b> as a file.
 <ol type="a">
 <li>Download a file from the <a href="{esc(repo)}/releases/latest">latest release</a>: <code>-256</code> is
