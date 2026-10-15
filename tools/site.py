@@ -106,7 +106,9 @@ def main():
         total += len(tiles)
         who = ' · '.join(x for x in [doc.get('author', {}).get('name'), p.get('date') if p.get('date') != '??-??' else ''] if x)
         sections.append(
-            f'<section id="{esc(p["id"])}"><h2>{esc(p["name"])} <span>{len(tiles)}</span></h2>'
+            f'<section id="{esc(p["id"])}"><div class="head"><h2>{esc(p["name"])} <span>{len(tiles)}</span></h2>'
+            f'<button type="button" class="link" data-act="copy">Copy link</button>'
+            f'<button type="button" class="link share" data-act="share" hidden>Share</button></div>'
             f'<p class="by">{esc(who)}</p><div class="grid">{"".join(tiles)}</div></section>')
     nav = ''.join(f'<a href="#{esc(p["id"])}">{esc(p["name"])}</a>'
                   for p in sorted(index['packs'], key=lambda p: p['name'].lower()))
@@ -126,7 +128,9 @@ aside h1 {{ font-size: 18px; margin: 0 8px 12px; }}
 aside h1 a {{ padding: 0; font-weight: inherit; }} aside h1 a:hover {{ background: none; text-decoration: underline; }}
 aside a {{ display: block; padding: 4px 8px; border-radius: 4px; color: inherit; text-decoration: none; }}
 aside a:hover {{ background: var(--line); }}
-main {{ overflow-y: auto; padding: 16px 24px 48px; scroll-behavior: smooth; }}
+main {{ overflow-y: auto; padding: 16px 24px 48px; scroll-behavior: smooth; position: relative; }}
+#top {{ position: absolute; top: 0; }}
+aside a[aria-current] {{ background: var(--line); font-weight: 600; }}
 main a {{ color: var(--accent); }}
 .intro {{ max-width: 760px; }} .intro p, .by {{ color: var(--muted); margin: 0 0 8px; }}
 .how {{ border: 1px solid var(--line); border-radius: 8px; padding: 4px 16px; margin: 12px 0 8px; }}
@@ -136,7 +140,10 @@ main a {{ color: var(--accent); }}
   border-radius: 4px; background: var(--bg); color: inherit; }}
 button {{ font: inherit; padding: 6px 12px; border: 1px solid var(--line); border-radius: 4px; background: var(--side);
   color: inherit; cursor: pointer; }}
-section h2 {{ margin: 24px 0 2px; border-top: 1px solid var(--line); padding-top: 16px; }}
+section .head {{ display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; margin-top: 24px;
+  border-top: 1px solid var(--line); padding-top: 16px; }}
+section h2 {{ margin: 0 auto 2px 0; }}
+button.link {{ font-size: 13px; padding: 3px 10px; }}
 section h2 span {{ color: var(--muted); font-weight: normal; font-size: .8em; }}
 .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; }}
 figure {{ margin: 0; }} img, .sw {{ width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; display: block; border: 1px solid var(--line); }}
@@ -158,8 +165,9 @@ dialog::backdrop {{ background: rgba(0, 0, 0, .88); }}
   main {{ flex: 1; padding: 12px 16px 48px; }}
 }}
 </style></head><body>
-<aside><h1><a href="#" title="Back to the top" onclick="document.querySelector('main').scrollTo({{ top: 0 }}); return false">{esc(index["name"])}</a></h1><nav aria-label="Collections">{nav}</nav></aside>
+<aside><h1><a href="#top" title="Back to the top">{esc(index["name"])}</a></h1><nav aria-label="Collections">{nav}</nav></aside>
 <main>
+<span id="top"></span>
 <div class="intro"><h1>{esc(index["name"])}</h1>
 <p>{esc(index.get("description", ""))} {len(index["packs"])} packs, {total} colors and fabrics.</p>
 {how_to(repo, index)}</div>
@@ -171,13 +179,54 @@ dialog::backdrop {{ background: rgba(0, 0, 0, .88); }}
 <button type="button" class="close" aria-label="Close">✕</button>
 </dialog>
 <script>
-function copyAddress(b) {{
-  const input = b.previousElementSibling;
-  input.select();
-  (navigator.clipboard ? navigator.clipboard.writeText(input.value) : Promise.reject())
-    .catch(() => document.execCommand('copy'))
-    .finally(() => {{ b.textContent = 'Copied'; setTimeout(() => (b.textContent = 'Copy'), 1500); }});
+/** Copy `text`, and say so on the button for a moment. */
+function copyText(text, b) {{
+  const label = b.textContent;
+  (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject())
+    .catch(() => {{
+      const t = Object.assign(document.createElement('textarea'), {{ value: text }});
+      document.body.append(t);
+      t.select();
+      document.execCommand('copy');
+      t.remove();
+    }})
+    .finally(() => {{ b.textContent = 'Copied'; setTimeout(() => (b.textContent = label), 1500); }});
 }}
+function copyAddress(b) {{
+  b.previousElementSibling.select();
+  copyText(b.previousElementSibling.value, b);
+}}
+// Each collection: copy its link, or share it (where the system share sheet exists).
+const pageUrl = location.href.split('#')[0];
+if (navigator.share) for (const b of document.querySelectorAll('button.share')) b.hidden = false;
+document.querySelector('main').addEventListener('click', (e) => {{
+  const b = e.target.closest('button[data-act]');
+  if (!b) return;
+  const s = b.closest('section');
+  const url = `${{pageUrl}}#${{s.id}}`;
+  if (b.dataset.act === 'copy') copyText(url, b);
+  else navigator.share({{ title: s.querySelector('h2').firstChild.textContent.trim(), url }}).catch(() => {{}});
+}});
+// The address follows the collection being looked at (replaced, so Back isn't filled with them),
+// and the sidebar marks it.
+const main = document.querySelector('main');
+const sections = [...main.querySelectorAll('section')];
+let current = location.hash.slice(1);
+function follow() {{
+  const y = main.scrollTop + 48;
+  const s = sections.filter((x) => x.offsetTop <= y).pop();
+  const id = s ? s.id : 'top';
+  if (id === current) return;
+  current = id;
+  history.replaceState(null, '', '#' + id);
+  for (const a of document.querySelectorAll('aside nav a'))
+    a.toggleAttribute('aria-current', a.getAttribute('href') === '#' + id);
+}}
+let ticking = false;
+main.addEventListener('scroll', () => {{
+  if (!ticking) requestAnimationFrame(() => {{ follow(); ticking = false; }});
+  ticking = true;
+}});
 // Carousel: a collection's fabrics, opened at the one clicked.
 const dlg = document.getElementById('carousel');
 const img = dlg.querySelector('img');
