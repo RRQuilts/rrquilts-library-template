@@ -1,5 +1,5 @@
 """Shared helpers for the library tools."""
-import hashlib, io, json, re
+import hashlib, io, json, os, re, subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -35,3 +35,16 @@ def name_from_file(file):
     sku = m.group(1) if m else None
     rest = re.sub(r'\s+', ' ', re.sub(r'[-_]+', ' ', base[len(sku):] if sku else base)).strip()
     return (rest or sku or base), sku
+
+
+def repo_url():
+    """The repository's GitHub address: from GitHub Actions, else the git remote; None if neither."""
+    if os.environ.get('GITHUB_REPOSITORY'):
+        return f"{os.environ.get('GITHUB_SERVER_URL', 'https://github.com')}/{os.environ['GITHUB_REPOSITORY']}"
+    try:
+        url = subprocess.run(['git', 'remote', 'get-url', 'origin'], cwd=ROOT, capture_output=True,
+                             text=True).stdout.strip()
+    except OSError:
+        return None
+    m = re.match(r'(?:https://github\.com/|git@github\.com:)([^/]+/[^/]+?)(?:\.git)?$', url)
+    return f'https://github.com/{m.group(1)}' if m else None

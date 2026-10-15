@@ -4,7 +4,7 @@
 was built with 1024 px images (build.py --print). Import them in
 RRQuilts › Libraries › Import."""
 import re, zipfile
-from common import ROOT, read_json, slug
+from common import ROOT, read_json, repo_url, slug, write_json
 
 KEEP = {'256': lambda px: px <= 256, '512': lambda px: px <= 512, '1024': lambda px: px > 512}
 
@@ -20,11 +20,15 @@ def main():
     dist = ROOT / 'dist'
     dist.mkdir(exist_ok=True)
     name = slug(index['name'], 80)
+    # The index inside names the repository, so RRQuilts can connect a downloaded file to it.
+    repo = repo_url()
+    index_file = dist / '.library.json'
+    write_json(index_file, {**index, **({'repository': repo} if repo else {})})
     large = any(d.name.isdigit() and int(d.name) > 512 for d in (ROOT / 'packs').glob('*/*'))
     for size, keep in KEEP.items():
         if size == '1024' and not large:
             continue
-        files = [('library.json', ROOT / 'library.json')]
+        files = [('library.json', index_file)]
         for p in index['packs']:
             pdir = (ROOT / p['path']).parent
             for f in sorted(pdir.rglob('*')):
@@ -36,6 +40,7 @@ def main():
                     continue
                 files.append((rel, f))
         zip_files(dist / f'{name}-{size}.rrqlib', files)
+    index_file.unlink()
     print('\n'.join(sorted(f.name for f in dist.glob('*.rrqlib'))))
 
 

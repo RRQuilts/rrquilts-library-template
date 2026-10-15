@@ -5,10 +5,10 @@ GitHub Pages. The Pages workflow runs this on each push to main.
     uv run tools/site.py          # writes site/index.html and copies the images it shows
     python -m http.server -d site # preview at http://localhost:8000
 """
-import html, os, re, shutil, subprocess
+import html, re, shutil
 from urllib.parse import quote
 from pathlib import Path
-from common import ROOT, read_json
+from common import ROOT, read_json, repo_url
 
 SITE = ROOT / 'site'
 # Material "menu" icon, for the collections list on phones.
@@ -28,19 +28,6 @@ APP = 'https://ragingroosevelt.github.io/RRQuilts/'
 
 def esc(s):
     return html.escape(str(s or ''), quote=True)
-
-
-def repo_url():
-    """The repository's GitHub address: from GitHub Actions, else the git remote; None if neither."""
-    if os.environ.get('GITHUB_REPOSITORY'):
-        return f"{os.environ.get('GITHUB_SERVER_URL', 'https://github.com')}/{os.environ['GITHUB_REPOSITORY']}"
-    try:
-        url = subprocess.run(['git', 'remote', 'get-url', 'origin'], cwd=ROOT, capture_output=True,
-                             text=True).stdout.strip()
-    except OSError:
-        return None
-    m = re.match(r'(?:https://github\.com/|git@github\.com:)([^/]+/[^/]+?)(?:\.git)?$', url)
-    return f'https://github.com/{m.group(1)}' if m else None
 
 
 def file_mb(index, *px):
