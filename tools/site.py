@@ -31,15 +31,9 @@ def repo_url():
     return f'https://github.com/{m.group(1)}' if m else None
 
 
-def mb(n):
-    return f'{n / 1e6:.0f} MB' if n >= 1e7 else f'{n / 1e6:.1f} MB'
-
-
-def how_to(repo, index):
+def how_to(repo):
     """Brief instructions for adding the library to RRQuilts."""
-    total = lambda *px: sum(p.get('sizes', {}).get(str(x), 0) for p in index['packs'] for x in px)
-    files = (f'<code>-256</code> (about {mb(total(256))}, smaller images) or <code>-512</code> '
-             f'(about {mb(total(256, 512))}, sharper images)')
+    files = ('<code>-256</code> (smaller file) or <code>-512</code> (larger file, sharper images)')
     if not repo:
         return (f'<p>Add it in <a href="{APP}">RRQuilts</a>: <b>Libraries › Add from the web…</b> with this '
                 'library\'s address, or import its <code>.rrqlib</code> file in <b>Libraries › Import</b>.</p>')
@@ -156,7 +150,7 @@ dialog::backdrop {{ background: rgba(0, 0, 0, .88); }}
 <main>
 <div class="intro"><h1>{esc(index["name"])}</h1>
 <p>{esc(index.get("description", ""))} {len(index["packs"])} packs, {total} colors and fabrics.</p>
-{how_to(repo, index)}</div>
+{how_to(repo)}</div>
 {"".join(sections)}</main>
 <dialog id="carousel" aria-label="Fabric images">
 <div class="view"><img alt=""><p><span class="name"></span><br><small class="meta"></small></p></div>
