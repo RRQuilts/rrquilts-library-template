@@ -24,7 +24,18 @@ def webp(im, px):
     return buf.getvalue(), out.size
 
 
-def build_pack(cfg, folder, old):
+
+def contents_of(fabrics):
+    """What a pack's update would change: its fabrics, their names and images."""
+    return sorted((f['id'], f['notecard']['name'], tuple(i['sha256'] for i in f.get('sizes', [])))
+                  for f in fabrics)
+
+
+def contents(doc):
+    return contents_of([f for it in doc['items'] for f in it['data'].get('fabrics', [])]) if doc else None
+
+
+def build_pack(cfg, folder, listed):
     meta = read_json(folder / 'pack.json', {})
     name = meta.get('name') or folder.name.replace('-', ' ').title()
     designer = meta.get('designer') or cfg['author']['name']
@@ -32,6 +43,7 @@ def build_pack(cfg, folder, old):
     approximate = not (meta.get('size_inches') or cfg.get('default_size_inches'))
     lib, pack_id = cfg['id'], f"{cfg['id']}-{slug(folder.name, 120)}"
     pdir = ROOT / 'packs' / pack_id
+    old = read_json(pdir / 'rrqlib.json', None)  # the earlier build, for its revision and contents
     shutil.rmtree(pdir, ignore_errors=True)  # no images left from an earlier build
     fabrics, ids, preview = [], set(), []
     sizes_bytes = {str(s): 0 for s in SIZES}
@@ -76,7 +88,10 @@ def build_pack(cfg, folder, old):
         preview.append({'id': fid, 'name': fname, 'average': avg})
     if not fabrics:
         return None
-    revision = (old or {}).get('revision', 0) + 1
+    # A pack whose fabrics or images change gets the next revision, so apps download it again.
+    # Without the earlier build, go on from the revision library.json lists.
+    base = (old or listed or {}).get('revision', 0)
+    revision = base + (1 if old is None or contents(old) != contents_of(fabrics) else 0)
     doc = {
         'format': 'rrqlib', 'version': FORMATS['rrqlib'], 'units': 'in', 'kind': 'pack',
         'id': pack_id, 'revision': revision, 'name': name, 'description': cfg.get('description', ''),
@@ -115,8 +130,8 @@ def main():
             continue
         entry = build_pack(cfg, folder, packs.get(pack_id))
         if entry:
+            changed |= entry['revision'] != packs.get(pack_id, {}).get('revision')
             packs[pack_id] = entry
-            changed = True
             print(f'  + {folder.name} ({entry["items"]} fabrics)')
     revision = index.get('revision', 0) + (1 if changed else 0)
     changelog = index.get('changelog', [])
