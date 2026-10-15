@@ -131,7 +131,7 @@ html, body {{ height: 100%; }}
 body {{ margin: 0; font: 15px/1.4 system-ui, sans-serif; color: var(--fg); background: var(--bg);
   display: grid; grid-template-columns: 260px 1fr; overflow: hidden; }}
 aside {{ background: var(--side); border-right: 1px solid var(--line); overflow-y: auto; padding: 16px 8px; }}
-aside h1 {{ font-size: 18px; margin: 0 8px 12px; }}
+aside h1 {{ font-size: 24px; line-height: 1.2; margin: 0 8px 12px; }}
 .bar {{ display: flex; align-items: center; justify-content: space-between; }}
 .menu {{ display: none; padding: 4px; border: none; background: none; }}
 aside h1 a {{ padding: 0; font-weight: inherit; }} aside h1 a:hover {{ background: none; text-decoration: underline; }}
@@ -176,7 +176,7 @@ dialog::backdrop {{ background: rgba(0, 0, 0, .88); }}
 @media (max-width: 700px) {{
   body {{ display: flex; flex-direction: column; }}
   aside {{ border-right: none; border-bottom: 1px solid var(--line); flex: none; padding: 8px; overflow: visible; }}
-  aside h1 {{ margin: 0 8px; }}
+  aside h1 {{ font-size: 22px; margin: 0 8px; }}
   .menu {{ display: inline-flex; }}
   aside nav {{ display: none; max-height: 60vh; overflow-y: auto; margin-top: 8px; }}
   aside.open nav {{ display: block; }}
@@ -188,7 +188,7 @@ dialog::backdrop {{ background: rgba(0, 0, 0, .88); }}
 <nav id="toc" aria-label="Collections">{nav}</nav></aside>
 <main>
 <span id="top"></span>
-<div class="intro"><h1>{esc(index["name"])}</h1>
+<div class="intro">
 <p>{esc(index.get("description", ""))} {len(index["packs"])} packs, {total} colors and fabrics.</p>
 {how_to(repo, index)}</div>
 {"".join(sections)}</main>
