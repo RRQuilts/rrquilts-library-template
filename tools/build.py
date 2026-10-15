@@ -4,12 +4,13 @@
     uv run tools/build.py                # build new or changed packs
     uv run tools/build.py --rebuild      # rebuild every pack
     uv run tools/build.py --note "Added Spring 2027"   # changelog note for this revision
+    uv run tools/build.py --print --rebuild   # also 1024 px images, for printing
 
 A folder may hold `pack.json` (name, designer, tags, size_inches, crop). Images (JPEG, PNG, WebP)
-are cropped to a centred square (unless crop is false) and saved as WebP at 256/512/1024 px, never
-enlarged. Writes `packs/<pack>/rrqlib.json`, the images beside it, and `library.json`.
+are cropped to a centred square (unless crop is false) and saved as WebP at 256 and 512 px (and 1024 px
+with --print: about three times the size, used only when printing), never enlarged. Writes `packs/<pack>/rrqlib.json`, the images beside it, and `library.json`.
 """
-import argparse, datetime, io, sys
+import argparse, datetime, io, shutil, sys
 from PIL import Image, ImageStat
 from common import FORMATS, ROOT, SIZES, name_from_file, read_json, sha256, slug, write_json
 
@@ -31,6 +32,7 @@ def build_pack(cfg, folder, old):
     approximate = not (meta.get('size_inches') or cfg.get('default_size_inches'))
     lib, pack_id = cfg['id'], f"{cfg['id']}-{slug(folder.name, 120)}"
     pdir = ROOT / 'packs' / pack_id
+    shutil.rmtree(pdir, ignore_errors=True)  # no images left from an earlier build
     fabrics, ids, preview = [], set(), []
     sizes_bytes = {str(s): 0 for s in SIZES}
     for f in sorted(folder.iterdir()):
@@ -60,7 +62,7 @@ def build_pack(cfg, folder, old):
             (pdir / str(real)).mkdir(parents=True, exist_ok=True)
             (pdir / rel).write_bytes(data)
             images.append({'px': real, 'sha256': sha256(data), 'type': 'image/webp', 'width': iw, 'height': ih, 'path': rel})
-            sizes_bytes['256' if real <= 256 else '512' if real <= 512 else '1024'] += len(data)
+            sizes_bytes[str(min(s for s in SIZES if real <= s))] += len(data)
         avg = [round(c) for c in ImageStat.Stat(im.resize((64, 64), Image.BOX)).mean]
         w, h = im.size
         main = [i for i in images if i['px'] <= 512][-1]
@@ -94,7 +96,10 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--rebuild', action='store_true')
     ap.add_argument('--note', help='changelog note for this revision')
+    ap.add_argument('--print', action='store_true', help='also make 1024 px images (for printing)')
     a = ap.parse_args()
+    global SIZES
+    SIZES = (256, 512, 1024) if a.print else (256, 512)
     cfg = read_json(ROOT / 'library.config.json')
     if not cfg:
         sys.exit('library.config.json is missing.')

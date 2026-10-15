@@ -3,7 +3,7 @@ import hashlib, io, json, re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SIZES = (256, 512, 1024)
+SIZES = (256, 512)  # build.py --print adds 1024
 FORMATS_URL = 'https://ragingroosevelt.github.io/RRQuilts/schemas/formats.json'
 TEMPLATE_RAW = 'https://raw.githubusercontent.com/RagingRoosevelt/rrquilts-library-template/main/'
 # Format versions these tools write. `tools/upgrade.py` moves a library to newer ones.

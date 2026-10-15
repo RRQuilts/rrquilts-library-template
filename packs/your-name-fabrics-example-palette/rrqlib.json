@@ -4,7 +4,7 @@
  "units": "in",
  "kind": "pack",
  "id": "your-name-fabrics-example-palette",
- "revision": 1,
+ "revision": 2,
  "name": "Example Palette",
  "description": "What this library holds.",
  "author": {
@@ -69,14 +69,6 @@
         "width": 512,
         "height": 512,
         "path": "512/blue-dots.webp"
-       },
-       {
-        "px": 600,
-        "sha256": "77f07b719e584b4a2fb9145c38492bb330eff6fc10a73424aaf299956ff788c8",
-        "type": "image/webp",
-        "width": 600,
-        "height": 600,
-        "path": "600/blue-dots.webp"
        }
       ]
      },
@@ -118,14 +110,6 @@
         "width": 512,
         "height": 512,
         "path": "512/red-dots.webp"
-       },
-       {
-        "px": 600,
-        "sha256": "52ddec584633e09ab9b2789a2e69947ef4e34371e2ca36ba009aa51dfe3449a7",
-        "type": "image/webp",
-        "width": 600,
-        "height": 600,
-        "path": "600/red-dots.webp"
        }
       ]
      }

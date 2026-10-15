@@ -9,7 +9,7 @@
   "url": "https://example.org"
  },
  "license": "CC-BY-SA-4.0",
- "revision": 1,
+ "revision": 2,
  "changelog": [
   {
    "revision": 1,
@@ -24,11 +24,10 @@
    "kind": "palettes",
    "path": "packs/your-name-fabrics-example-palette/rrqlib.json",
    "items": 2,
-   "revision": 1,
+   "revision": 2,
    "sizes": {
     "256": 17858,
-    "512": 32356,
-    "1024": 37316
+    "512": 32356
    },
    "fabrics": [
     {

@@ -1,6 +1,7 @@
 #!/usr/bin/env -S uv run
 """Build `.rrqlib` files into dist/: the whole library and each pack, per image size —
-<name>-256 (Light), <name>-512 (Standard, includes 256), <name>-1024 (Print). Import them in
+<name>-256 (Light), <name>-512 (Standard, includes 256), and <name>-1024 (Print) when the library
+was built with 1024 px images (build.py --print). Import them in
 RRQuilts › Libraries › Import."""
 import re, zipfile
 from pathlib import Path
@@ -20,7 +21,10 @@ def main():
     dist = ROOT / 'dist'
     dist.mkdir(exist_ok=True)
     name = slug(index['name'], 80)
+    large = any(d.name.isdigit() and int(d.name) > 512 for d in (ROOT / 'packs').glob('*/*'))
     for size, keep in KEEP.items():
+        if size == '1024' and not large:
+            continue
         files = [('library.json', ROOT / 'library.json')]
         for p in index['packs']:
             pdir = (ROOT / p['path']).parent
