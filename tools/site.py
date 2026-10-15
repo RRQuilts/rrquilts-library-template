@@ -38,13 +38,21 @@ def how_to(repo):
     return f'''<div class="how">
 <h2>Use it in <a href="{APP}">RRQuilts</a></h2>
 <ol>
-<li><b>Connect it</b> to get new collections as they're added: in RRQuilts, open <b>Libraries › Add from the
-web…</b>, paste this address and click <b>Connect</b>. Then switch on the collections you want.
+<li><b>Add this library</b> to get new collections as they're added.
+<ol type="a">
+<li>Copy this address:
 <div class="copy"><input readonly value="{esc(repo)}" aria-label="Library address"
 onfocus="this.select()"><button type="button" onclick="copyAddress(this)">Copy</button></div></li>
-<li><b>Or import it</b>: download a <code>.rrqlib</code> file from the
-<a href="{esc(repo)}/releases/latest">latest release</a> (<code>-256</code> is Light, <code>-512</code>
-Standard) and open it in <b>Libraries › Import</b>.</li>
+<li>In RRQuilts, open <b>Libraries › Add from the web…</b></li>
+<li>Paste the address and click <b>Connect</b>.</li>
+<li>Switch on the collections you want.</li>
+</ol></li>
+<li><b>Or import it</b> as a file.
+<ol type="a">
+<li>Download a <code>.rrqlib</code> file from the <a href="{esc(repo)}/releases/latest">latest release</a>:
+<code>-256</code> is Light, <code>-512</code> Standard.</li>
+<li>In RRQuilts, open <b>Libraries › Import</b> and choose the file.</li>
+</ol></li>
 </ol></div>'''
 
 
@@ -107,7 +115,7 @@ main {{ overflow-y: auto; padding: 16px 24px 48px; scroll-behavior: smooth; }}
 main a {{ color: var(--accent); }}
 .intro {{ max-width: 760px; }} .intro p, .by {{ color: var(--muted); margin: 0 0 8px; }}
 .how {{ border: 1px solid var(--line); border-radius: 8px; padding: 4px 16px; margin: 12px 0 8px; }}
-.how h2 {{ font-size: 17px; margin: 12px 0 4px; }} .how li {{ margin: 8px 0; }}
+.how h2 {{ font-size: 17px; margin: 12px 0 4px; }} .how li {{ margin: 8px 0; }} .how ol ol {{ padding-left: 20px; }} .how ol ol li {{ margin: 4px 0; }}
 .copy {{ display: flex; gap: 6px; margin-top: 6px; max-width: 520px; }}
 .copy input {{ flex: 1; min-width: 0; font: 14px ui-monospace, monospace; padding: 6px 8px; border: 1px solid var(--line);
   border-radius: 4px; background: var(--bg); color: inherit; }}
