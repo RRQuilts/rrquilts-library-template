@@ -11,6 +11,9 @@ from pathlib import Path
 from common import ROOT, read_json
 
 SITE = ROOT / 'site'
+# Material "menu" icon, for the collections list on phones.
+MENU_ICON = ('<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" '
+             'd="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>')
 # Material "link" icon, for the Copy link buttons.
 LINK_ICON = ('<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M3.9 12c0-1.71 '
              '1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 '
@@ -129,6 +132,8 @@ body {{ margin: 0; font: 15px/1.4 system-ui, sans-serif; color: var(--fg); backg
   display: grid; grid-template-columns: 260px 1fr; overflow: hidden; }}
 aside {{ background: var(--side); border-right: 1px solid var(--line); overflow-y: auto; padding: 16px 8px; }}
 aside h1 {{ font-size: 18px; margin: 0 8px 12px; }}
+.bar {{ display: flex; align-items: center; justify-content: space-between; }}
+.menu {{ display: none; padding: 4px; border: none; background: none; }}
 aside h1 a {{ padding: 0; font-weight: inherit; }} aside h1 a:hover {{ background: none; text-decoration: underline; }}
 aside a {{ display: block; padding: 4px 8px; border-radius: 4px; color: inherit; text-decoration: none; }}
 aside a:hover {{ background: var(--line); }}
@@ -170,11 +175,17 @@ dialog::backdrop {{ background: rgba(0, 0, 0, .88); }}
 #toast.on {{ opacity: 1; transform: translate(-50%, 0); }}
 @media (max-width: 700px) {{
   body {{ display: flex; flex-direction: column; }}
-  aside {{ max-height: 30vh; border-right: none; border-bottom: 1px solid var(--line); flex: none; }}
+  aside {{ border-right: none; border-bottom: 1px solid var(--line); flex: none; padding: 8px; overflow: visible; }}
+  aside h1 {{ margin: 0 8px; }}
+  .menu {{ display: inline-flex; }}
+  aside nav {{ display: none; max-height: 60vh; overflow-y: auto; margin-top: 8px; }}
+  aside.open nav {{ display: block; }}
   main {{ flex: 1; padding: 12px 16px 48px; }}
 }}
 </style></head><body>
-<aside><h1><a href="#top" title="Back to the top">{esc(index["name"])}</a></h1><nav aria-label="Collections">{nav}</nav></aside>
+<aside><div class="bar"><h1><a href="#top" title="Back to the top">{esc(index["name"])}</a></h1>
+<button type="button" class="menu" aria-expanded="false" aria-controls="toc" aria-label="Collections">{MENU_ICON}</button></div>
+<nav id="toc" aria-label="Collections">{nav}</nav></aside>
 <main>
 <span id="top"></span>
 <div class="intro"><h1>{esc(index["name"])}</h1>
@@ -243,6 +254,18 @@ let ticking = false;
 main.addEventListener('scroll', () => {{
   if (!ticking) requestAnimationFrame(() => {{ follow(); ticking = false; }});
   ticking = true;
+}});
+// Phones: the collections list opens from the menu button, and closes on picking one.
+const aside = document.querySelector('aside');
+const menu = aside.querySelector('.menu');
+menu.addEventListener('click', () => {{
+  menu.setAttribute('aria-expanded', String(aside.classList.toggle('open')));
+}});
+aside.querySelector('nav').addEventListener('click', (e) => {{
+  if (e.target.closest('a')) {{
+    aside.classList.remove('open');
+    menu.setAttribute('aria-expanded', 'false');
+  }}
 }});
 // Carousel: a collection's fabrics, opened at the one clicked.
 const dlg = document.getElementById('carousel');
