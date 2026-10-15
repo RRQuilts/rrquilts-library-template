@@ -6,12 +6,16 @@
     uv run tools/build.py --note "Added Spring 2027"   # changelog note for this revision
     uv run tools/build.py --print --rebuild   # also 1024 px images, for printing
 
-A folder may hold `pack.json` (name, designer, tags, size_inches, crop). Images (JPEG, PNG, WebP)
+A folder may hold `pack.json` (name, designer, description, tags, size_inches, crop, and `fabrics`:
+per-file overrides `{"<file>": {"name", "sku", "size": [w, h]}}`), and a `palette.rrqplt` whose
+colors become the pack's (a solids pack needs no images). Images (JPEG, PNG, WebP)
 are cropped to a centred square (unless crop is false) and saved as WebP at 256 and 512 px (and 1024 px
 with --print: about three times the size, used only when printing), never enlarged. Writes `packs/<pack>/rrqlib.json`, the images beside it, and `library.json`.
 """
 import argparse, datetime, io, shutil, sys
 from PIL import Image, ImageStat
+
+Image.MAX_IMAGE_PIXELS = 300_000_000  # manufacturers' photos can be print resolution
 from common import FORMATS, ROOT, SIZES, name_from_file, read_json, sha256, slug, write_json
 
 
@@ -25,14 +29,18 @@ def webp(im, px):
 
 
 
-def contents_of(fabrics):
-    """What a pack's update would change: its fabrics, their names and images."""
-    return sorted((f['id'], f['notecard']['name'], tuple(i['sha256'] for i in f.get('sizes', [])))
-                  for f in fabrics)
+def contents_of(fabrics, colors=()):
+    """What a pack's update would change: its fabrics (names, images) and colors (names, values)."""
+    return (sorted((f['id'], f['notecard']['name'], tuple(i['sha256'] for i in f.get('sizes', [])))
+                   for f in fabrics),
+            sorted((c['id'], c['notecard']['name'], tuple(c['rgb'])) for c in colors))
 
 
 def contents(doc):
-    return contents_of([f for it in doc['items'] for f in it['data'].get('fabrics', [])]) if doc else None
+    if not doc:
+        return None
+    data = [it['data'] for it in doc['items']]
+    return contents_of([f for d in data for f in d.get('fabrics', [])], [c for d in data for c in d.get('colors', [])])
 
 
 def build_pack(cfg, folder, listed):
@@ -47,6 +55,7 @@ def build_pack(cfg, folder, listed):
     shutil.rmtree(pdir, ignore_errors=True)  # no images left from an earlier build
     fabrics, ids, preview = [], set(), []
     sizes_bytes = {str(s): 0 for s in SIZES}
+    maker = cfg.get('manufacturer')
     for f in sorted(folder.iterdir()):
         if f.suffix.lower() not in ('.jpg', '.jpeg', '.png', '.webp'):
             continue
@@ -55,11 +64,14 @@ def build_pack(cfg, folder, listed):
         except Exception:
             print(f'    ! unreadable: {f.name}')
             continue
+        im.thumbnail((2048, 2048))  # plenty for the largest image (1024 px), and quick
+        over = meta.get('fabrics', {}).get(f.name, {})
         if meta.get('crop', True):
             w, h = im.size
             s = min(w, h)
             im = im.crop(((w - s) // 2, (h - s) // 2, (w - s) // 2 + s, (h - s) // 2 + s))
         fname, sku = name_from_file(f.name)
+        fname, sku = over.get('name', fname), over.get('sku', sku)
         fid, n = f'{lib}.{slug(sku or fname)}', 2
         while fid in ids:
             fid, n = f'{lib}.{slug(sku or fname, 58)}-{n}', n + 1
@@ -70,7 +82,7 @@ def build_pack(cfg, folder, listed):
             if images and images[-1]['width'] == iw:
                 continue
             real = max(iw, ih)
-            rel = f'{real}/{slug(sku or fname, 80)}.webp'
+            rel = f"{real}/{fid.split('.', 1)[1]}.webp"
             (pdir / str(real)).mkdir(parents=True, exist_ok=True)
             (pdir / rel).write_bytes(data)
             images.append({'px': real, 'sha256': sha256(data), 'type': 'image/webp', 'width': iw, 'height': ih, 'path': rel})
@@ -79,32 +91,38 @@ def build_pack(cfg, folder, listed):
         w, h = im.size
         main = [i for i in images if i['px'] <= 512][-1]
         fabrics.append({
-            'id': fid, 'notecard': {'name': fname}, 'author': designer, 'license': cfg['license'],
+            'id': fid,
+            'notecard': {'name': fname, **({'reference': f'{maker} {sku}'} if maker and sku else {})},
+            'author': designer, 'license': cfg['license'],
             'image': {k: main[k] for k in ('sha256', 'type', 'width', 'height')},
-            'size': [inches, round(inches * h / w, 2)],
+            'size': over.get('size') or [inches, round(inches * h / w, 2)],
             **({'approximate': True} if approximate else {}),
-            'average': avg, **({'sku': sku} if sku else {}), 'sizes': images,
+            'average': avg, **({'manufacturer': maker} if maker else {}),
+            **({'sku': sku} if sku else {}), 'sizes': images,
         })
         preview.append({'id': fid, 'name': fname, 'average': avg})
-    if not fabrics:
+    plt = read_json(folder / 'palette.rrqplt', None)
+    colors = plt['collection']['colors'] if plt else []
+    if not fabrics and not colors:
         return None
     # A pack whose fabrics or images change gets the next revision, so apps download it again.
     # Without the earlier build, go on from the revision library.json lists.
     base = (old or listed or {}).get('revision', 0)
-    revision = base + (1 if old is None or contents(old) != contents_of(fabrics) else 0)
+    revision = base + (1 if old is None or contents(old) != contents_of(fabrics, colors) else 0)
     doc = {
         'format': 'rrqlib', 'version': FORMATS['rrqlib'], 'units': 'in', 'kind': 'pack',
-        'id': pack_id, 'revision': revision, 'name': name, 'description': cfg.get('description', ''),
+        'id': pack_id, 'revision': revision, 'name': name,
+        'description': meta.get('description') or cfg.get('description', ''),
         'author': {'name': designer}, 'license': cfg['license'], 'categories': [],
         'library': {'id': lib, 'name': cfg['name']},
         'items': [{'type': 'colors', 'data': {
             'id': f'{lib}.{slug(folder.name, 58)}', 'author': designer, 'license': cfg['license'],
             'notecard': {'name': name, **({'tags': meta['tags']} if meta.get('tags') else {})},
-            'colors': [], 'fabrics': fabrics}}],
+            'colors': colors, 'fabrics': fabrics}}],
     }
     write_json(pdir / 'rrqlib.json', doc)
     return {'id': pack_id, 'name': name, 'kind': 'palettes', 'path': f'packs/{pack_id}/rrqlib.json',
-            'items': len(fabrics), 'revision': revision, 'sizes': sizes_bytes, 'fabrics': preview}
+            'items': len(fabrics) or len(colors), 'revision': revision, 'sizes': sizes_bytes, 'fabrics': preview}
 
 
 def main():

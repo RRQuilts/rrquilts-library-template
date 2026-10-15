@@ -13,7 +13,12 @@ folder in `sources/` becomes a **pack** (one palette) that people can switch on 
    may only use yourself).
 4. Put each palette's images in its own folder under `sources/` (JPEG, PNG, or WebP). Optional
    `pack.json` in a folder: `name`, `designer`, `tags`, `size_inches` (the real width each image
-   shows; 8 when absent, and the app marks it ≈), and `crop` (square from the center; default true).
+   shows; 8 when absent, and the app marks it ≈), `crop` (square from the center; default true),
+   `description`, and `fabrics`: per-file overrides, e.g.
+   `{"13900-11.jpg": {"name": "Daisy Pink", "sku": "13900 11", "size": [44, 22]}}` (size in inches).
+   A folder may also hold a `palette.rrqplt` (exported from RRQuilts): its colors join the pack, so
+   a solids pack needs no images. Optional in `library.config.json`: `manufacturer`, which fabrics
+   then name with their SKU (e.g. "Moda Fabrics 13900 11").
 5. Build and check:
 
    ```sh
