@@ -6,6 +6,7 @@ GitHub Pages. The Pages workflow runs this on each push to main.
     python -m http.server -d site # preview at http://localhost:8000
 """
 import html, os, re, shutil, subprocess
+from urllib.parse import quote
 from pathlib import Path
 from common import ROOT, read_json
 
@@ -45,8 +46,9 @@ def how_to(repo):
 onfocus="this.select()"><button type="button" onclick="copyAddress(this)">Copy</button></div></li>
 <li>In RRQuilts, open <b>Libraries › Add from the web…</b></li>
 <li>Paste the address and click <b>Connect</b>.</li>
-<li>Switch on the collections you want.</li>
-</ol></li>
+<li>Enable the collections you want.</li>
+</ol>
+Or <a href="{APP}libraries?add={quote(repo, safe='')}">follow this link</a> to add it directly.</li>
 <li><b>Or import it</b> as a file.
 <ol type="a">
 <li>Download a <code>.rrqlib</code> file from the <a href="{esc(repo)}/releases/latest">latest release</a>:
@@ -109,6 +111,7 @@ body {{ margin: 0; font: 15px/1.4 system-ui, sans-serif; color: var(--fg); backg
   display: grid; grid-template-columns: 260px 1fr; overflow: hidden; }}
 aside {{ background: var(--side); border-right: 1px solid var(--line); overflow-y: auto; padding: 16px 8px; }}
 aside h1 {{ font-size: 18px; margin: 0 8px 12px; }}
+aside h1 a {{ padding: 0; font-weight: inherit; }} aside h1 a:hover {{ background: none; text-decoration: underline; }}
 aside a {{ display: block; padding: 4px 8px; border-radius: 4px; color: inherit; text-decoration: none; }}
 aside a:hover {{ background: var(--line); }}
 main {{ overflow-y: auto; padding: 16px 24px 48px; scroll-behavior: smooth; }}
@@ -143,7 +146,7 @@ dialog::backdrop {{ background: rgba(0, 0, 0, .88); }}
   main {{ flex: 1; padding: 12px 16px 48px; }}
 }}
 </style></head><body>
-<aside><h1>{esc(index["name"])}</h1><nav aria-label="Collections">{nav}</nav></aside>
+<aside><h1><a href="#" title="Back to the top" onclick="document.querySelector('main').scrollTo({{ top: 0 }}); return false">{esc(index["name"])}</a></h1><nav aria-label="Collections">{nav}</nav></aside>
 <main>
 <div class="intro"><h1>{esc(index["name"])}</h1>
 <p>{esc(index.get("description", ""))} {len(index["packs"])} packs, {total} colors and fabrics.</p>
