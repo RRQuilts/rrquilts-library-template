@@ -33,7 +33,6 @@ def repo_url():
 
 def how_to(repo):
     """Brief instructions for adding the library to RRQuilts."""
-    files = ('<code>-256</code> (smaller file) or <code>-512</code> (larger file, sharper images)')
     if not repo:
         return (f'<p>Add it in <a href="{APP}">RRQuilts</a>: <b>Libraries › Add from the web…</b> with this '
                 'library\'s address, or import its <code>.rrqlib</code> file in <b>Libraries › Import</b>.</p>')
@@ -52,7 +51,8 @@ onfocus="this.select()"><button type="button" onclick="copyAddress(this)">Copy</
 Or <a href="{APP}libraries?add={quote(repo, safe='')}">follow this link</a> to add it directly.</li>
 <li><b>Or import it</b> as a file.
 <ol type="a">
-<li>Download <a href="{esc(repo)}/releases/latest">the latest release</a>'s {files} file.</li>
+<li>Download a file from the <a href="{esc(repo)}/releases/latest">latest release</a>: <code>-256</code> is
+smaller, <code>-512</code> is larger with sharper images.</li>
 <li>In RRQuilts, open <b>Libraries › Import</b> and choose the file.</li>
 </ol></li>
 </ol></div>'''
