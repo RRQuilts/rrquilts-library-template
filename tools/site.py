@@ -175,10 +175,12 @@ dialog::backdrop {{ background: rgba(0, 0, 0, .88); }}
 #toast.on {{ opacity: 1; transform: translate(-50%, 0); }}
 @media (max-width: 700px) {{
   body {{ display: flex; flex-direction: column; }}
-  aside {{ border-right: none; border-bottom: 1px solid var(--line); flex: none; padding: 8px; overflow: visible; }}
+  aside {{ border-right: none; border-bottom: 1px solid var(--line); flex: none; padding: 8px; overflow: visible;
+    position: relative; z-index: 5; }}
   aside h1 {{ font-size: 22px; margin: 0 8px; }}
   .menu {{ display: inline-flex; }}
-  aside nav {{ display: none; max-height: 60vh; overflow-y: auto; margin-top: 8px; }}
+  aside nav {{ display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 70vh; overflow-y: auto;
+    padding: 8px; background: var(--side); border-bottom: 1px solid var(--line); box-shadow: 0 8px 16px rgba(0, 0, 0, .25); }}
   aside.open nav {{ display: block; }}
   main {{ flex: 1; padding: 12px 16px 48px; }}
 }}
@@ -261,11 +263,15 @@ const menu = aside.querySelector('.menu');
 menu.addEventListener('click', () => {{
   menu.setAttribute('aria-expanded', String(aside.classList.toggle('open')));
 }});
+function closeMenu() {{
+  aside.classList.remove('open');
+  menu.setAttribute('aria-expanded', 'false');
+}}
 aside.querySelector('nav').addEventListener('click', (e) => {{
-  if (e.target.closest('a')) {{
-    aside.classList.remove('open');
-    menu.setAttribute('aria-expanded', 'false');
-  }}
+  if (e.target.closest('a')) closeMenu();
+}});
+document.addEventListener('click', (e) => {{
+  if (aside.classList.contains('open') && !aside.contains(e.target)) closeMenu();
 }});
 // Carousel: a collection's fabrics, opened at the one clicked.
 const dlg = document.getElementById('carousel');
