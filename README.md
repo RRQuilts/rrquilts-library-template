@@ -12,7 +12,9 @@ folder in `sources/` becomes a **pack** (one palette) that people can switch on 
    author, and license (an SPDX id like `CC-BY-SA-4.0`, or `LicenseRef-Personal-Use` for images you
    may only use yourself). Optional `links`: the library's `homepage`, its `gallery` (the Gallery
    site's address) and `others` (each a `name` and `url`). The app's globe icon opens the home page
-   (else the gallery), and the gallery lists them under About.
+   (else the gallery), and the gallery lists them under About. Release files name the repository they
+   come from, so RRQuilts can connect an imported file to it; on GitHub that's automatic, elsewhere
+   set `repository` (its web address) in `library.config.json`.
 4. Put each palette's images in its own folder under `sources/` (JPEG, PNG, or WebP). Optional
    `pack.json` in a folder: `name`, `designer`, `tags`, `size_inches` (the real width each image
    shows; 8 when absent, and the app marks it ≈), `crop` (square from the center; default true),

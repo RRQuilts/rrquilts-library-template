@@ -38,7 +38,11 @@ def name_from_file(file):
 
 
 def repo_url():
-    """The repository's GitHub address: from GitHub Actions, else the git remote; None if neither."""
+    """The library's repository address: library.config.json `repository` if set (for hosts other
+    than GitHub), else from GitHub Actions, else the git remote; None if none of them."""
+    set_by_hand = (read_json(ROOT / 'library.config.json', {}) or {}).get('repository')
+    if set_by_hand:
+        return set_by_hand
     if os.environ.get('GITHUB_REPOSITORY'):
         return f"{os.environ.get('GITHUB_SERVER_URL', 'https://github.com')}/{os.environ['GITHUB_REPOSITORY']}"
     try:
