@@ -9,12 +9,17 @@
   "url": "https://example.org"
  },
  "license": "CC-BY-SA-4.0",
- "revision": 2,
+ "revision": 3,
  "changelog": [
   {
    "revision": 1,
    "date": "2026-10-14",
    "notes": "Example palette"
+  },
+  {
+   "revision": 3,
+   "date": "2026-10-15",
+   "notes": "Library format 3"
   }
  ],
  "packs": [
@@ -24,7 +29,7 @@
    "kind": "palettes",
    "path": "packs/your-name-fabrics-example-palette/rrqlib.json",
    "items": 2,
-   "revision": 2,
+   "revision": 3,
    "sizes": {
     "256": 17858,
     "512": 32356

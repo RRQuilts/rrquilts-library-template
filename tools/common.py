@@ -7,7 +7,7 @@ SIZES = (256, 512)  # build.py --print adds 1024
 FORMATS_URL = 'https://ragingroosevelt.github.io/RRQuilts/schemas/formats.json'
 TEMPLATE_RAW = 'https://raw.githubusercontent.com/RagingRoosevelt/rrquilts-library-template/main/'
 # Format versions these tools write. `tools/upgrade.py` moves a library to newer ones.
-FORMATS = {'rrqlib': 2, 'rrqlib-index': 1}
+FORMATS = {'rrqlib': 3, 'rrqlib-index': 1}
 
 
 def slug(s, n=64):
