@@ -14,6 +14,11 @@ SITE = ROOT / 'site'
 # Material "menu" icon, for the collections list on phones.
 MENU_ICON = ('<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" '
              'd="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>')
+# Material "share" icon, for the Share buttons.
+SHARE_ICON = ('<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M18 16.08c-.76 '
+              '0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 '
+              '3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 '
+              '1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>')
 # Material "link" icon, for the Copy link buttons.
 LINK_ICON = ('<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M3.9 12c0-1.71 '
              '1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 '
@@ -115,7 +120,7 @@ def main():
         sections.append(
             f'<section id="{esc(p["id"])}"><div class="head"><h2>{esc(p["name"])} <span>{len(tiles)}</span></h2>'
             f'<button type="button" class="link icon" data-act="copy" aria-label="Copy link" title="Copy link">{LINK_ICON}</button>'
-            f'<button type="button" class="link share" data-act="share" hidden>Share</button></div>'
+            f'<button type="button" class="link icon share" data-act="share" aria-label="Share" title="Share" hidden>{SHARE_ICON}</button></div>'
             f'<p class="by">{esc(who)}</p><div class="grid">{"".join(tiles)}</div></section>')
     nav = ''.join(f'<a href="#{esc(p["id"])}">{esc(p["name"])}</a>'
                   for p in sorted(index['packs'], key=lambda p: p['name'].lower()))
@@ -149,11 +154,12 @@ main a {{ color: var(--accent); }}
   border-radius: 4px; background: var(--bg); color: inherit; }}
 button {{ font: inherit; padding: 6px 12px; border: 1px solid var(--line); border-radius: 4px; background: var(--side);
   color: inherit; cursor: pointer; }}
-section .head {{ display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; margin-top: 24px;
+section .head {{ display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 24px;
   border-top: 1px solid var(--line); padding-top: 16px; }}
 section h2 {{ margin: 0 auto 2px 0; }}
 button.link {{ font-size: 13px; padding: 3px 10px; }}
-button.icon {{ display: inline-flex; align-items: center; padding: 3px 6px; }}
+button.icon {{ display: inline-flex; align-items: center; padding: 4px; }}
+button[hidden] {{ display: none; }}
 section h2 span {{ color: var(--muted); font-weight: normal; font-size: .8em; }}
 .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; }}
 figure {{ margin: 0; }} img, .sw {{ width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; display: block; border: 1px solid var(--line); }}
