@@ -65,7 +65,8 @@ onfocus="this.select()"><button type="button" onclick="copyAddress(this)">Copy</
 smaller (about {file_mb(index, 256)} MB), <code>-512</code> is larger with sharper images (about
 {file_mb(index, 256, 512)} MB).</li>
 <li>In RRQuilts, open <b>Libraries › Import</b> and choose the file.</li>
-</ol></li>
+</ol>
+An imported file doesn't update itself. To get new collections, import a newer release.</li>
 </ol></div>'''
 
 
