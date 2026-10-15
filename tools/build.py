@@ -43,6 +43,19 @@ def contents(doc):
     return contents_of([f for d in data for f in d.get('fabrics', [])], [c for d in data for c in d.get('colors', [])])
 
 
+def links(cfg):
+    """The library's web pages (config `links`: homepage, gallery, others), for its documents."""
+    return {'links': cfg['links']} if cfg.get('links') else {}
+
+
+def relink(cfg, path):
+    """An unchanged pack takes the library's current links (no rebuild, no new revision)."""
+    doc = read_json(path)
+    if doc.get('links') != cfg.get('links'):
+        doc.pop('links', None)
+        write_json(path, {**doc, **links(cfg)})
+
+
 def build_pack(cfg, folder, listed):
     meta = read_json(folder / 'pack.json', {})
     name = meta.get('name') or folder.name.replace('-', ' ').title()
@@ -113,7 +126,7 @@ def build_pack(cfg, folder, listed):
         'format': 'rrqlib', 'version': FORMATS['rrqlib'], 'units': 'in', 'kind': 'pack',
         'id': pack_id, 'revision': revision, 'name': name,
         'description': meta.get('description') or cfg.get('description', ''),
-        'author': {'name': designer}, 'license': cfg['license'], 'categories': [],
+        'author': {'name': designer}, 'license': cfg['license'], **links(cfg), 'categories': [],
         'library': {'id': lib, 'name': cfg['name']},
         'items': [{'type': 'colors', 'data': {
             'id': f'{lib}.{slug(folder.name, 58)}', 'author': designer, 'license': cfg['license'],
@@ -151,6 +164,9 @@ def main():
             changed |= entry['revision'] != packs.get(pack_id, {}).get('revision')
             packs[pack_id] = entry
             print(f'  + {folder.name} ({entry["items"]} fabrics)')
+    for p in packs.values():  # every pack, built now or not, names the library's current pages
+        if (ROOT / p['path']).exists():
+            relink(cfg, ROOT / p['path'])
     revision = index.get('revision', 0) + (1 if changed else 0)
     changelog = index.get('changelog', [])
     if changed and a.note:
@@ -158,7 +174,7 @@ def main():
     write_json(ROOT / 'library.json', {
         'format': 'rrqlib-index', 'version': FORMATS['rrqlib-index'],
         'id': cfg['id'], 'name': cfg['name'], 'description': cfg.get('description', ''),
-        'author': cfg['author'], 'license': cfg['license'], 'revision': max(revision, 1),
+        'author': cfg['author'], 'license': cfg['license'], **links(cfg), 'revision': max(revision, 1),
         'changelog': changelog, 'packs': sorted(packs.values(), key=lambda p: p['name']),
     })
     print(f'library.json: revision {max(revision, 1)}, {len(packs)} packs')

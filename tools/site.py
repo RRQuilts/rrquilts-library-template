@@ -52,13 +52,24 @@ def file_mb(index, *px):
     return max(10, round(n / 1e7) * 10)
 
 
+def about_links(index):
+    """The library's web pages: home page first, then the others (not the gallery: this is it)."""
+    lk = index.get('links') or {}
+    pages = ([('Home page', lk['homepage'])] if lk.get('homepage') else []) + [
+        (o.get('name') or o['url'], o['url']) for o in lk.get('others', []) if o.get('url')]
+    pages = [(n, u) for n, u in pages if re.match(r'https?://', u)]
+    if not pages:
+        return ''
+    return '<ul class="links">' + ''.join(f'<li><a href="{esc(u)}">{esc(n)}</a></li>' for n, u in pages) + '</ul>'
+
+
 def how_to(repo, index):
     """Brief instructions for adding the library to RRQuilts."""
     if not repo:
         return (f'<p>Add it in <a href="{APP}">RRQuilts</a>: <b>Libraries › Add from the web…</b> with this '
                 'library\'s address, or import its <code>.rrqlib</code> file in <b>Libraries › Import</b>.</p>')
     return f'''<div class="how">
-<h2>Use it in <a href="{APP}">RRQuilts</a></h2>
+<p>Add it to <a href="{APP}">RRQuilts</a> in one of three ways:</p>
 <ol>
 <li><b>Follow <a href="{APP}libraries?add={quote(repo, safe='')}">this link</a></b> to add this library
 in RRQuilts, then enable the collections you want. New collections reach you as they're added.</li>
@@ -147,7 +158,9 @@ main {{ overflow-y: auto; padding: 16px 24px 48px; scroll-behavior: smooth; posi
 aside a[aria-current] {{ background: var(--line); font-weight: 600; }}
 main a {{ color: var(--accent); }}
 .intro {{ max-width: 760px; }} .intro p, .by {{ color: var(--muted); margin: 0 0 8px; }}
-.how {{ border: 1px solid var(--line); border-radius: 8px; padding: 4px 16px; margin: 12px 0 8px; }}
+.intro h1 {{ font-size: 22px; margin: 8px 0 6px; }} .intro h1 + p {{ margin-top: 0; }}
+.links {{ margin: 0 0 16px; padding-left: 20px; }} .links li {{ margin: 2px 0; }}
+.how {{ border: 1px solid var(--line); border-radius: 8px; padding: 4px 16px; margin: 0 0 8px; }}
 .how h2 {{ font-size: 17px; margin: 12px 0 4px; }} .how li {{ margin: 8px 0; }} .how ol ol {{ padding-left: 20px; }} .how ol ol li {{ margin: 4px 0; }}
 .copy {{ display: flex; gap: 6px; margin-top: 6px; max-width: 520px; }}
 .copy input {{ flex: 1; min-width: 0; font: 14px ui-monospace, monospace; padding: 6px 8px; border: 1px solid var(--line);
@@ -197,7 +210,10 @@ dialog::backdrop {{ background: rgba(0, 0, 0, .88); }}
 <main>
 <span id="top"></span>
 <div class="intro">
+<h1>About</h1>
 <p>{esc(index.get("description", ""))} {len(index["packs"])} packs, {total} colors and fabrics.</p>
+{about_links(index)}
+<h1>Installing</h1>
 {how_to(repo, index)}</div>
 {"".join(sections)}</main>
 <div id="toast" role="status" aria-live="polite"></div>

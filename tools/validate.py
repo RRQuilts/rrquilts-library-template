@@ -1,7 +1,7 @@
 #!/usr/bin/env -S uv run
 """Check the library: index and pack documents well-formed, every image present and matching its
 hash, paths inside the repository, format versions current. Exit code 1 on problems."""
-import sys
+import re, sys
 from pathlib import Path
 from common import FORMATS, ROOT, read_json, sha256
 
@@ -22,6 +22,11 @@ def main():
     check(index.get('version') == FORMATS['rrqlib-index'], 'library.json: version is not current (tools/upgrade.py)')
     for key in ('id', 'name', 'license', 'author', 'packs'):
         check(key in index, f'library.json: missing "{key}"')
+    lk = index.get('links') or {}
+    for name, url in [('homepage', lk.get('homepage')), ('gallery', lk.get('gallery'))] + [
+            (o.get('name', '?'), o.get('url')) for o in lk.get('others', [])]:
+        if url is not None:
+            check(isinstance(url, str) and re.match(r'https?://', url), f'library.json: links: {name} is not a web address')
     for p in index.get('packs', []):
         path = p.get('path', '')
         if not check(path and '..' not in path and not path.startswith('/'), f'{p.get("id")}: bad path'):
