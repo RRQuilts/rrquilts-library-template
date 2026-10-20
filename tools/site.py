@@ -125,8 +125,10 @@ def main():
         for item in doc['items']:
             data = item['data']
             if item['type'] == 'block':
-                tiles.append(f'<figure data-type="blocks">{block_svg(item)}'
-                             f'<figcaption>{esc(data["notecard"]["name"])}</figcaption></figure>')
+                name, size = data['notecard']['name'], ' × '.join(f'{round(n, 2):g}' for n in data['size']) + ' in'
+                tiles.append(f'<figure data-type="blocks"><a class="zoom" href="#" data-name="{esc(name)}"'
+                             f' data-size="{esc(size)}">{block_svg(item)}</a>'
+                             f'<figcaption>{esc(name)}<small>{esc(size)}</small></figcaption></figure>')
                 continue
             for c in data.get('colors', []):
                 rgb = 'rgb({},{},{})'.format(*c['rgb'])
@@ -218,6 +220,8 @@ dialog::backdrop {{ background: rgba(0, 0, 0, .88); }}
 .view {{ height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px; }}
 .view img {{ width: auto; height: auto; max-width: min(92vw, 1024px); max-height: calc(100vh - 120px); aspect-ratio: auto;
   object-fit: contain; border: none; }}
+.view .big svg {{ width: min(92vw, 900px); height: min(calc(100vh - 140px), 900px); aspect-ratio: auto; border: none;
+  background: none; }}
 .view p {{ margin: 10px 0 0; text-align: center; }} .view small {{ color: #bbb; }}
 .nav {{ position: fixed; top: 50%; transform: translateY(-50%); font-size: 28px; line-height: 1; padding: 12px 16px;
   background: rgba(0, 0, 0, .5); color: #fff; border: none; border-radius: 50%; }}
@@ -256,8 +260,8 @@ dialog::backdrop {{ background: rgba(0, 0, 0, .88); }}
 </div>
 {"".join(sections)}</main>
 <div id="toast" role="status" aria-live="polite"></div>
-<dialog id="carousel" aria-label="Fabric images">
-<div class="view"><img alt=""><p><span class="name"></span><br><small class="meta"></small></p></div>
+<dialog id="carousel" aria-label="Preview">
+<div class="view"><img alt=""><div class="big"></div><p><span class="name"></span><br><small class="meta"></small></p></div>
 <button type="button" class="nav prev" aria-label="Previous">‹</button>
 <button type="button" class="nav next" aria-label="Next">›</button>
 <button type="button" class="close" aria-label="Close">✕</button>
@@ -349,15 +353,21 @@ document.querySelector('.types').addEventListener('click', (e) => {{
   if (b) showTypes(b.dataset.show);
 }});
 showTypes('{start}');
-// Carousel: a collection's fabrics, opened at the one clicked.
+// Carousel: a pack's fabrics (or its blocks), opened at the one clicked.
 const dlg = document.getElementById('carousel');
 const img = dlg.querySelector('img');
+const big = dlg.querySelector('.big');
 let items = [], at = 0;
 function show(i) {{
   at = (i + items.length) % items.length;
   const a = items[at];
-  img.src = a.href;
-  img.alt = a.dataset.name;
+  const svg = a.querySelector('svg');
+  big.replaceChildren(...(svg ? [svg.cloneNode(true)] : []));
+  img.hidden = !!svg;
+  if (!svg) {{
+    img.src = a.href;
+    img.alt = a.dataset.name;
+  }}
   dlg.querySelector('.name').textContent = a.dataset.name;
   dlg.querySelector('.meta').textContent = `${{a.dataset.size}} · ${{at + 1}} of ${{items.length}}`;
 }}
@@ -365,7 +375,8 @@ document.querySelector('main').addEventListener('click', (e) => {{
   const a = e.target.closest('a.zoom');
   if (!a) return;
   e.preventDefault();
-  items = [...a.closest('section').querySelectorAll('a.zoom')];
+  const kind = a.closest('figure').dataset.type;
+  items = [...a.closest('section').querySelectorAll(`figure[data-type="${{kind}}"] a.zoom`)];
   show(items.indexOf(a));
   dlg.showModal();
 }});
