@@ -10,7 +10,7 @@ the new versions) and rebuild. Migrations that change fields will be added to th
 import argparse, json, subprocess, sys, urllib.request
 from common import FORMATS, ROOT, TEMPLATE_RAW, FORMATS_URL
 
-TOOLS = ['common.py', 'build.py', 'validate.py', 'release.py', 'upgrade.py']
+TOOLS = ['common.py', 'build.py', 'validate.py', 'release.py', 'site.py', 'upgrade.py']
 
 
 def latest():
