@@ -1,6 +1,6 @@
 {
  "format": "rrqlib",
- "version": 3,
+ "version": 5,
  "units": "in",
  "kind": "pack",
  "id": "your-name-fabrics-example-palette",
@@ -11,6 +11,16 @@
   "name": "Your Name"
  },
  "license": "CC-BY-SA-4.0",
+ "links": {
+  "homepage": "https://example.org",
+  "gallery": "https://you.github.io/your-library/",
+  "others": [
+   {
+    "name": "Shop",
+    "url": "https://shop.example.org"
+   }
+  ]
+ },
  "categories": [],
  "library": {
   "id": "your-name-fabrics",

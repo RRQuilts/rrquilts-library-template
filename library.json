@@ -9,6 +9,16 @@
   "url": "https://example.org"
  },
  "license": "CC-BY-SA-4.0",
+ "links": {
+  "homepage": "https://example.org",
+  "gallery": "https://you.github.io/your-library/",
+  "others": [
+   {
+    "name": "Shop",
+    "url": "https://shop.example.org"
+   }
+  ]
+ },
  "revision": 3,
  "changelog": [
   {

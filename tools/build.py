@@ -45,6 +45,25 @@ def contents(doc):
     return contents_of([f for d in pal for f in d.get('fabrics', [])], [c for d in pal for c in d.get('colors', [])]), blocks
 
 
+def exported(path, fmt):
+    """A file exported from RRQuilts (`palette.rrqplt`, `blocks.rrqlib`), or None. Its items go into the
+    pack as they are, so one from a newer RRQuilts than these tools is refused (its fields could be
+    lost or mislabeled); an older one is used, with a warning to export it again."""
+    doc = read_json(path, None)
+    if doc is None:
+        return None
+    rel = path.relative_to(ROOT)
+    if doc.get('format') != fmt or not isinstance(doc.get('version'), int):
+        sys.exit(f'{rel}: not an RRQuilts {fmt} file.')
+    if doc['version'] > FORMATS[fmt]:
+        sys.exit(f'{rel}: made by a newer RRQuilts ({fmt} {doc["version"]}; these tools know {FORMATS[fmt]}). '
+                 'Run `uv run tools/upgrade.py` first.')
+    if doc['version'] < FORMATS[fmt]:
+        print(f'    ! {rel}: {fmt} {doc["version"]} is older than {FORMATS[fmt]}; used as is. '
+              'Export it again from RRQuilts to bring it up to date.')
+    return doc
+
+
 def links(cfg):
     """The library's web pages (config `links`: homepage, gallery, others), for its documents."""
     return {'links': cfg['links']} if cfg.get('links') else {}
@@ -66,6 +85,9 @@ def build_pack(cfg, folder, listed):
     approximate = not (meta.get('size_inches') or cfg.get('default_size_inches'))
     lib, pack_id = cfg['id'], f"{cfg['id']}-{slug(folder.name, 120)}"
     pdir = ROOT / 'packs' / pack_id
+    # RRQuilts exports first: a refused one stops the build before the earlier one is removed.
+    plt = exported(folder / 'palette.rrqplt', 'rrqplt')
+    made = exported(folder / 'blocks.rrqlib', 'rrqlib') or {}
     old = read_json(pdir / 'rrqlib.json', None)  # the earlier build, for its revision and contents
     shutil.rmtree(pdir, ignore_errors=True)  # no images left from an earlier build
     fabrics, ids, preview = [], set(), []
@@ -116,9 +138,7 @@ def build_pack(cfg, folder, listed):
             **({'sku': sku} if sku else {}), 'sizes': images,
         })
         preview.append({'id': fid, 'name': fname, 'average': avg})
-    plt = read_json(folder / 'palette.rrqplt', None)
     colors = plt['collection']['colors'] if plt else []
-    made = read_json(folder / 'blocks.rrqlib', None) or {}
     # ponytail: blocks only; fabric images inside blocks aren't copied out yet (paint blocks with colors)
     block_items = [it for it in made.get('items', []) if it.get('type') == 'block']
     used = {it.get('category') for it in block_items}

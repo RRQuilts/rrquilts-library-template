@@ -23,7 +23,9 @@ folder in `sources/` becomes a **pack** (one palette) that people can switch on 
    A folder may also hold a `palette.rrqplt` (exported from RRQuilts): its colors join the pack, so
    a solids pack needs no images. For blocks, make a pack in RRQuilts (Libraries › Make a pack) and
    save it in the folder as `blocks.rrqlib` (plain JSON): its blocks and their categories join the
-   pack. Paint those blocks with colors; fabric images inside blocks aren't carried yet. Optional in `library.config.json`: `manufacturer`, which fabrics
+   pack. Paint those blocks with colors; fabric images inside blocks aren't carried yet. A file from a newer
+   RRQuilts than the tools stops the build (run `tools/upgrade.py`); an older one is used with a
+   warning to export it again. Optional in `library.config.json`: `manufacturer`, which fabrics
    then name with their SKU (e.g. "Moda Fabrics 13900 11").
 5. Build and check:
 
