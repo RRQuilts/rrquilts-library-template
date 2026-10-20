@@ -39,6 +39,9 @@ def main():
         check(doc.get('author', {}).get('name') and doc.get('license'), f'{path}: needs author and license')
         base = (ROOT / path).parent
         for item in doc.get('items', []):
+            if item.get('type') == 'block':
+                d = item.get('data', {})
+                check(d.get('id') and d.get('author') and d.get('license'), f'{path}: block {d.get("id")}: needs id, author and license')
             for f in item.get('data', {}).get('fabrics', []) or []:
                 for s in f.get('sizes', []):
                     rel = s.get('path', '')

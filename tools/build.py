@@ -7,8 +7,9 @@
     uv run tools/build.py --print --rebuild   # also 1024 px images, for printing
 
 A folder may hold `pack.json` (name, designer, description, tags, size_inches, crop, and `fabrics`:
-per-file overrides `{"<file>": {"name", "sku", "size": [w, h]}}`), and a `palette.rrqplt` whose
-colors become the pack's (a solids pack needs no images). Images (JPEG, PNG, WebP)
+per-file overrides `{"<file>": {"name", "sku", "size": [w, h]}}`), a `palette.rrqplt` whose
+colors become the pack's (a solids pack needs no images), and a `blocks.rrqlib` (a pack made in
+RRQuilts, Libraries › Make a pack) whose blocks and their categories join the pack. Images (JPEG, PNG, WebP)
 are cropped to a centred square (unless crop is false) and saved as WebP at 256 and 512 px (and 1024 px
 with --print: about three times the size, used only when printing), never enlarged. Writes `packs/<pack>/rrqlib.json`, the images beside it, and `library.json`.
 """
@@ -39,8 +40,9 @@ def contents_of(fabrics, colors=()):
 def contents(doc):
     if not doc:
         return None
-    data = [it['data'] for it in doc['items']]
-    return contents_of([f for d in data for f in d.get('fabrics', [])], [c for d in data for c in d.get('colors', [])])
+    pal = [it['data'] for it in doc['items'] if it['type'] == 'colors']
+    blocks = sorted((it['data']['id'], it['data'].get('version', '')) for it in doc['items'] if it['type'] == 'block')
+    return contents_of([f for d in pal for f in d.get('fabrics', [])], [c for d in pal for c in d.get('colors', [])]), blocks
 
 
 def links(cfg):
@@ -116,26 +118,34 @@ def build_pack(cfg, folder, listed):
         preview.append({'id': fid, 'name': fname, 'average': avg})
     plt = read_json(folder / 'palette.rrqplt', None)
     colors = plt['collection']['colors'] if plt else []
-    if not fabrics and not colors:
+    made = read_json(folder / 'blocks.rrqlib', None) or {}
+    # ponytail: blocks only; fabric images inside blocks aren't copied out yet (paint blocks with colors)
+    block_items = [it for it in made.get('items', []) if it.get('type') == 'block']
+    used = {it.get('category') for it in block_items}
+    categories = [c for c in made.get('categories', []) if c.get('id') in used]
+    if not fabrics and not colors and not block_items:
         return None
     # A pack whose fabrics or images change gets the next revision, so apps download it again.
     # Without the earlier build, go on from the revision library.json lists.
     base = (old or listed or {}).get('revision', 0)
-    revision = base + (1 if old is None or contents(old) != contents_of(fabrics, colors) else 0)
+    palette = [{'type': 'colors', 'data': {
+        'id': f'{lib}.{slug(folder.name, 58)}', 'author': designer, 'license': cfg['license'],
+        'notecard': {'name': name, **({'tags': meta['tags']} if meta.get('tags') else {})},
+        'colors': colors, 'fabrics': fabrics}}] if fabrics or colors else []
+    new = {'items': palette + block_items}
+    revision = base + (1 if old is None or contents(old) != contents(new) else 0)
     doc = {
         'format': 'rrqlib', 'version': FORMATS['rrqlib'], 'units': 'in', 'kind': 'pack',
         'id': pack_id, 'revision': revision, 'name': name,
         'description': meta.get('description') or cfg.get('description', ''),
-        'author': {'name': designer}, 'license': cfg['license'], **links(cfg), 'categories': [],
+        'author': {'name': designer}, 'license': cfg['license'], **links(cfg), 'categories': categories,
         'library': {'id': lib, 'name': cfg['name']},
-        'items': [{'type': 'colors', 'data': {
-            'id': f'{lib}.{slug(folder.name, 58)}', 'author': designer, 'license': cfg['license'],
-            'notecard': {'name': name, **({'tags': meta['tags']} if meta.get('tags') else {})},
-            'colors': colors, 'fabrics': fabrics}}],
+        'items': new['items'],
     }
     write_json(pdir / 'rrqlib.json', doc)
-    return {'id': pack_id, 'name': name, 'kind': 'palettes', 'path': f'packs/{pack_id}/rrqlib.json',
-            'items': len(fabrics) or len(colors), 'revision': revision, 'sizes': sizes_bytes, 'fabrics': preview}
+    return {'id': pack_id, 'name': name, 'kind': 'palettes' if palette else 'blocks',
+            'path': f'packs/{pack_id}/rrqlib.json',
+            'items': len(fabrics) or len(colors) or len(block_items), 'revision': revision, 'sizes': sizes_bytes, 'fabrics': preview}
 
 
 def main():
@@ -163,7 +173,7 @@ def main():
         if entry:
             changed |= entry['revision'] != packs.get(pack_id, {}).get('revision')
             packs[pack_id] = entry
-            print(f'  + {folder.name} ({entry["items"]} fabrics)')
+            print(f'  + {folder.name} ({entry["items"]} items)')
     for p in packs.values():  # every pack, built now or not, names the library's current pages
         if (ROOT / p['path']).exists():
             relink(cfg, ROOT / p['path'])

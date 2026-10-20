@@ -91,6 +91,9 @@ def main():
         tiles = []
         for item in doc['items']:
             data = item['data']
+            if item['type'] == 'block':  # ponytail: name only; drawing blocks needs the app's renderer
+                tiles.append(f'<figure><figcaption>{esc(data["notecard"]["name"])}</figcaption></figure>')
+                continue
             for c in data.get('colors', []):
                 rgb = 'rgb({},{},{})'.format(*c['rgb'])
                 tiles.append(f'<figure><div class="sw" style="background:{rgb}"></div>'

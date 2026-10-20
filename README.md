@@ -21,7 +21,9 @@ folder in `sources/` becomes a **pack** (one palette) that people can switch on 
    `description`, and `fabrics`: per-file overrides, e.g.
    `{"13900-11.jpg": {"name": "Daisy Pink", "sku": "13900 11", "size": [44, 22]}}` (size in inches).
    A folder may also hold a `palette.rrqplt` (exported from RRQuilts): its colors join the pack, so
-   a solids pack needs no images. Optional in `library.config.json`: `manufacturer`, which fabrics
+   a solids pack needs no images. For blocks, make a pack in RRQuilts (Libraries › Make a pack) and
+   save it in the folder as `blocks.rrqlib` (plain JSON): its blocks and their categories join the
+   pack. Paint those blocks with colors; fabric images inside blocks aren't carried yet. Optional in `library.config.json`: `manufacturer`, which fabrics
    then name with their SKU (e.g. "Moda Fabrics 13900 11").
 5. Build and check:
 
