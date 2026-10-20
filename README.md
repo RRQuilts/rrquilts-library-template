@@ -10,7 +10,9 @@ folder in `sources/` becomes a **pack** (one palette) that people can switch on 
 2. Install [uv](https://docs.astral.sh/uv/) (it brings the right Python and Pillow).
 3. Edit `library.config.json`: an `id` (lowercase, e.g. `jane-doe-fabrics`), name, description,
    author, and license (an SPDX id like `CC-BY-SA-4.0`, or `LicenseRef-Personal-Use` for images you
-   may only use yourself). Optional `links`: the library's `homepage`, its `gallery` (the Gallery
+   may only use yourself). The author can have a `url` and `socials`, each a `type` (GitHub,
+   Ravelry, Printables, Threadloop, Website, …, as in RRQuilts › Settings › You) and a `handle`;
+   packs carry them, so the app credits the author with them. Optional `links`: the library's `homepage`, its `gallery` (the Gallery
    site's address) and `others` (each a `name` and `url`). The app's globe icon opens the home page
    (else the gallery), and the gallery lists them under About. Release files name the repository they
    come from, so RRQuilts can connect an imported file to it; on GitHub that's automatic, elsewhere

@@ -13,7 +13,7 @@ RRQuilts, Libraries › Make a pack) whose blocks and their categories join the 
 are cropped to a centred square (unless crop is false) and saved as WebP at 256 and 512 px (and 1024 px
 with --print: about three times the size, used only when printing), never enlarged. Writes `packs/<pack>/rrqlib.json`, the images beside it, and `library.json`.
 """
-import argparse, datetime, io, shutil, sys
+import argparse, datetime, io, json, shutil, sys
 from PIL import Image, ImageStat
 
 Image.MAX_IMAGE_PIXELS = 300_000_000  # manufacturers' photos can be print resolution
@@ -42,7 +42,8 @@ def contents(doc):
         return None
     pal = [it['data'] for it in doc['items'] if it['type'] == 'colors']
     blocks = sorted((it['data']['id'], it['data'].get('version', '')) for it in doc['items'] if it['type'] == 'block')
-    return contents_of([f for d in pal for f in d.get('fabrics', [])], [c for d in pal for c in d.get('colors', [])]), blocks
+    fills = contents_of([f for d in pal for f in d.get('fabrics', [])], [c for d in pal for c in d.get('colors', [])])
+    return fills, blocks, json.dumps(doc.get('author'), sort_keys=True)  # who it credits counts too
 
 
 def exported(path, fmt):
@@ -75,6 +76,12 @@ def relink(cfg, path):
     if doc.get('links') != cfg.get('links'):
         doc.pop('links', None)
         write_json(path, {**doc, **links(cfg)})
+
+
+def author(cfg, designer):
+    """The pack's author: the library's (with its url and socials) unless pack.json names another."""
+    a = cfg['author']
+    return {k: a[k] for k in ('name', 'url', 'socials') if k in a} if designer == a['name'] else {'name': designer}
 
 
 def build_pack(cfg, folder, listed):
@@ -152,13 +159,13 @@ def build_pack(cfg, folder, listed):
         'id': f'{lib}.{slug(folder.name, 58)}', 'author': designer, 'license': cfg['license'],
         'notecard': {'name': name, **({'tags': meta['tags']} if meta.get('tags') else {})},
         'colors': colors, 'fabrics': fabrics}}] if fabrics or colors else []
-    new = {'items': palette + block_items}
+    new = {'items': palette + block_items, 'author': author(cfg, designer)}
     revision = base + (1 if old is None or contents(old) != contents(new) else 0)
     doc = {
         'format': 'rrqlib', 'version': FORMATS['rrqlib'], 'units': 'in', 'kind': 'pack',
         'id': pack_id, 'revision': revision, 'name': name,
         'description': meta.get('description') or cfg.get('description', ''),
-        'author': {'name': designer}, 'license': cfg['license'], **links(cfg), 'categories': categories,
+        'author': author(cfg, designer), 'license': cfg['license'], **links(cfg), 'categories': categories,
         'library': {'id': lib, 'name': cfg['name']},
         'items': new['items'],
     }
