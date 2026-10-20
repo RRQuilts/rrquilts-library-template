@@ -49,6 +49,10 @@ websites to read them (CORS):
 
 - **Public GitHub repository** (simplest): people add it with its address,
   `https://github.com/<you>/<repo>`. RRQuilts reads the files from `raw.githubusercontent.com`.
+  Or share a link that opens RRQuilts with the address filled in (it asks before connecting):
+  `https://ragingroosevelt.github.io/RRQuilts/libraries?add=https%3A%2F%2Fgithub.com%2F<you>%2F<repo>`
+  (the address URL-encoded; add `&ref=<branch or tag>` for one other than `main`). The gallery
+  site's Installing section has this link already.
 - **GitHub Pages**: turn on Pages for the repository (Settings › Pages › Deploy from a branch ›
   `main` / root) and share the Pages address.
 - **Any static host** (Netlify, Codeberg Pages, your own server) that sends
@@ -88,7 +92,7 @@ tools/                  build, validate, release, upgrade
 
 ## Gallery site
 
-Every push to `main` builds a page showing all the library's fabrics and colors (`tools/site.py`,
+Every push to `main` builds a page showing all the library's blocks, fabrics and colors, grouped by pack (with a Blocks · Palettes · All switch) (`tools/site.py`,
 workflow **Gallery site**) and publishes it with GitHub Pages. Turn it on once: **Settings › Pages ›
 Source: GitHub Actions**. Preview it locally with `uv run tools/site.py` and open `site/index.html`.
 The page is public like the repository, so only publish images you're allowed to share.

@@ -1,11 +1,11 @@
 #!/usr/bin/env -S uv run
-"""Build site/: a static page showing every pack of the library (fabric images and colors), for
+"""Build site/: a static page showing every pack of the library (blocks, fabric images and colors), for
 GitHub Pages. The Pages workflow runs this on each push to main.
 
     uv run tools/site.py          # writes site/index.html and copies the images it shows
     python -m http.server -d site # preview at http://localhost:8000
 """
-import html, re, shutil
+import html, math, re, shutil
 from urllib.parse import quote
 from pathlib import Path
 from common import ROOT, read_json, repo_url
@@ -28,6 +28,38 @@ APP = 'https://ragingroosevelt.github.io/RRQuilts/'
 
 def esc(s):
     return html.escape(str(s or ''), quote=True)
+
+
+def block_svg(item):
+    """A block drawn as SVG from its patches (paths in 0…1, scaled to its size so arcs are circular),
+    in its first coloring. Fabric fills show the fabric's average color."""
+    d = item['data']
+    w, h = d['size']
+    rgb = {c['id']: 'rgb({},{},{})'.format(*c['rgb']) for c in item.get('colors', [])}
+    rgb.update({f['id']: 'rgb({},{},{})'.format(*f['average']) for f in item.get('fabrics', []) if f.get('average')})
+    fills = (d.get('colorings') or [{}])[0].get('fills', {})
+    out = []
+    for p in d.get('patches', []):
+        cmds, x0, y0 = [], 0, 0
+        for c in p['path']:
+            if c[0] in 'ML':
+                x0, y0 = c[1] * w, c[2] * h
+                cmds.append(f'{c[0]}{x0:.4g} {y0:.4g}')
+            elif c[0] == 'A':  # chord to (x, y), signed sweep in degrees, + = counter-clockwise on screen
+                x, y, sweep = c[1] * w, c[2] * h, c[3]
+                r = math.hypot(x - x0, y - y0) / (2 * math.sin(math.radians(abs(sweep)) / 2))
+                cmds.append(f'A{r:.4g} {r:.4g} 0 {int(abs(sweep) > 180)} {int(sweep < 0)} {x:.4g} {y:.4g}')
+                x0, y0 = x, y
+            elif c[0] == 'C':
+                cmds.append('C' + ' '.join(f'{v * (w if i % 2 == 0 else h):.4g}' for i, v in enumerate(c[1:])))
+                x0, y0 = c[5] * w, c[6] * h
+            elif c[0] == 'Z':
+                cmds.append('Z')
+        f = fills.get(p['id'], {})
+        color = rgb.get(f.get('color') or f.get('fabric'), '#ccc')
+        out.append(f'<path d="{" ".join(cmds)}" fill="{color}"/>')
+    return (f'<svg class="blk" viewBox="0 0 {w:g} {h:g}" role="img" aria-label="{esc(d["notecard"]["name"])}">'
+            f'<g stroke="#0006" stroke-width="{max(w, h) / 300:.3g}" stroke-linejoin="round">{"".join(out)}</g></svg>')
 
 
 def file_mb(index, *px):
@@ -84,19 +116,21 @@ def main():
     index = read_json(ROOT / 'library.json')
     shutil.rmtree(SITE, ignore_errors=True)
     SITE.mkdir()
-    sections, total = [], 0
+    sections, total, n_palettes = [], 0, 0
     for p in sorted(index['packs'], key=lambda p: p['name'].lower()):
         doc = read_json(ROOT / p['path'])
         base = Path(p['path']).parent
         tiles = []
+        n_palettes += sum(1 for i in doc['items'] if i['type'] == 'colors')
         for item in doc['items']:
             data = item['data']
-            if item['type'] == 'block':  # ponytail: name only; drawing blocks needs the app's renderer
-                tiles.append(f'<figure><figcaption>{esc(data["notecard"]["name"])}</figcaption></figure>')
+            if item['type'] == 'block':
+                tiles.append(f'<figure data-type="blocks">{block_svg(item)}'
+                             f'<figcaption>{esc(data["notecard"]["name"])}</figcaption></figure>')
                 continue
             for c in data.get('colors', []):
                 rgb = 'rgb({},{},{})'.format(*c['rgb'])
-                tiles.append(f'<figure><div class="sw" style="background:{rgb}"></div>'
+                tiles.append(f'<figure data-type="palettes"><div class="sw" style="background:{rgb}"></div>'
                              f'<figcaption>{esc(c["notecard"]["name"])}</figcaption></figure>')
             for f in data.get('fabrics', []):
                 sizes = sorted(f.get('sizes', []), key=lambda s: s['px'])
@@ -111,7 +145,7 @@ def main():
                 avg = 'rgb({},{},{})'.format(*f['average'])
                 size = ' × '.join(f'{n:g}' for n in f['size']) + ' in' + (' ≈' if f.get('approximate') else '')
                 tiles.append(
-                    f'<figure><a class="zoom" href="{esc((base / large["path"]).as_posix())}"'
+                    f'<figure data-type="palettes"><a class="zoom" href="{esc((base / large["path"]).as_posix())}"'
                     f' data-name="{esc(f["notecard"]["name"])}" data-size="{esc(size)}">'
                     f'<img src="{esc((base / small["path"]).as_posix())}" alt="{esc(f["notecard"]["name"])}"'
                     f' loading="lazy" style="background:{avg}"></a>'
@@ -119,10 +153,15 @@ def main():
         total += len(tiles)
         who = ' · '.join(x for x in [doc.get('author', {}).get('name'), p.get('date') if p.get('date') != '??-??' else ''] if x)
         sections.append(
-            f'<section id="{esc(p["id"])}"><div class="head"><h2>{esc(p["name"])} <span>{len(tiles)}</span></h2>'
+            f'<section id="{esc(p["id"])}" data-types="{" ".join(sorted({"blocks" if i["type"] == "block" else "palettes" for i in doc["items"]}))}"><div class="head"><h2>{esc(p["name"])} <span>{len(tiles)}</span></h2>'
             f'<button type="button" class="link icon" data-act="copy" aria-label="Copy link" title="Copy link">{LINK_ICON}</button>'
             f'<button type="button" class="link icon share" data-act="share" aria-label="Share" title="Share" hidden>{SHARE_ICON}</button></div>'
             f'<p class="by">{esc(who)}</p><div class="grid">{"".join(tiles)}</div></section>')
+    n_blocks = sum(s.count('data-type="blocks"') for s in sections)
+    # The switch starts on whichever there are more of (blocks, or palettes).
+    start = 'blocks' if n_blocks > n_palettes else 'palettes'
+    counts = ' and '.join(x for x in [f'{n_blocks} blocks' if n_blocks else '',
+                                      f'{total - n_blocks} colors and fabrics' if total - n_blocks else ''] if x) or 'nothing yet'
     nav = ''.join(f'<a href="#{esc(p["id"])}">{esc(p["name"])}</a>'
                   for p in sorted(index['packs'], key=lambda p: p['name'].lower()))
     repo = repo_url()
@@ -164,6 +203,12 @@ button.link {{ font-size: 13px; padding: 3px 10px; }}
 button.icon {{ display: inline-flex; align-items: center; padding: 4px; }}
 button[hidden] {{ display: none; }}
 section h2 span {{ color: var(--muted); font-weight: normal; font-size: .8em; }}
+hr {{ border: none; border-top: 1px solid var(--line); margin: 16px 0 12px; }}
+.types {{ display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }}
+.types button {{ border: none; border-radius: 0; background: none; padding: 6px 16px; }}
+.types button[aria-checked="true"] {{ background: var(--accent); color: var(--bg); }}
+[data-hide] {{ display: none !important; }}
+.blk {{ width: 100%; aspect-ratio: 1; display: block; border-radius: 6px; border: 1px solid var(--line); background: var(--side); }}
 .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; }}
 figure {{ margin: 0; }} img, .sw {{ width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; display: block; border: 1px solid var(--line); }}
 figcaption {{ font-size: 12px; margin-top: 4px; overflow-wrap: anywhere; }} figcaption small {{ display: block; color: var(--muted); }}
@@ -201,10 +246,14 @@ dialog::backdrop {{ background: rgba(0, 0, 0, .88); }}
 <span id="top"></span>
 <div class="intro">
 <h1>About</h1>
-<p>{esc(index.get("description", ""))} {len(index["packs"])} packs, {total} colors and fabrics.</p>
+<p>{esc(index.get("description", ""))} {len(index["packs"])} packs, {counts}.</p>
 {about_links(index)}
 <h1>Installing</h1>
 {how_to(repo, index)}</div>
+<hr>
+<div class="types" role="radiogroup" aria-label="Show">
+<button type="button" role="radio" data-show="blocks">Blocks</button><button type="button" role="radio" data-show="palettes">Palettes</button><button type="button" role="radio" data-show="all">All</button>
+</div>
 {"".join(sections)}</main>
 <div id="toast" role="status" aria-live="polite"></div>
 <dialog id="carousel" aria-label="Fabric images">
@@ -285,6 +334,21 @@ aside.querySelector('nav').addEventListener('click', (e) => {{
 document.addEventListener('click', (e) => {{
   if (aside.classList.contains('open') && !aside.contains(e.target)) closeMenu();
 }});
+// Blocks | Palettes | All: hides the other kind's tiles, and packs (and their sidebar links) left empty.
+function showTypes(t) {{
+  for (const b of document.querySelectorAll('.types button')) b.setAttribute('aria-checked', String(b.dataset.show === t));
+  for (const f of document.querySelectorAll('main figure[data-type]')) f.toggleAttribute('data-hide', t !== 'all' && f.dataset.type !== t);
+  for (const s of sections) {{
+    const off = t !== 'all' && !s.dataset.types.split(' ').includes(t);
+    s.toggleAttribute('data-hide', off);
+    document.querySelector(`aside nav a[href="#${{s.id}}"]`)?.toggleAttribute('data-hide', off);
+  }}
+}}
+document.querySelector('.types').addEventListener('click', (e) => {{
+  const b = e.target.closest('button[data-show]');
+  if (b) showTypes(b.dataset.show);
+}});
+showTypes('{start}');
 // Carousel: a collection's fabrics, opened at the one clicked.
 const dlg = document.getElementById('carousel');
 const img = dlg.querySelector('img');
