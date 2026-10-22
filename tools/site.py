@@ -32,7 +32,8 @@ def esc(s):
 
 def block_svg(item):
     """A block drawn as SVG from its patches (paths in 0…1, scaled to its size so arcs are circular),
-    in its first coloring. Fabric fills show the fabric's average color."""
+    in its first coloring. Fabric fills show the fabric's average color. A month data block (library
+    format 6) shows its own 31-day drawing."""
     d = item['data']
     w, h = d['size']
     rgb = {c['id']: 'rgb({},{},{})'.format(*c['rgb']) for c in item.get('colors', [])}
@@ -56,6 +57,7 @@ def block_svg(item):
             elif c[0] == 'Z':
                 cmds.append('Z')
         f = fills.get(p['id'], {})
+        f = f.get('under', {}) if 'data' in f else f  # a data block's day place: the color under it
         color = rgb.get(f.get('color') or f.get('fabric'), '#ccc')
         out.append(f'<path d="{" ".join(cmds)}" fill="{color}"/>')
     return (f'<svg class="blk" viewBox="0 0 {w:g} {h:g}" role="img" aria-label="{esc(d["notecard"]["name"])}">'
