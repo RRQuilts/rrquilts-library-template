@@ -19,7 +19,7 @@
    }
   ]
  },
- "revision": 3,
+ "revision": 4,
  "changelog": [
   {
    "revision": 1,
@@ -30,6 +30,11 @@
    "revision": 3,
    "date": "2026-10-15",
    "notes": "Library format 3"
+  },
+  {
+   "revision": 4,
+   "date": "2026-10-29",
+   "notes": "Library format 7 (RRQuilts 0.7.2)"
   }
  ],
  "packs": [
@@ -39,7 +44,7 @@
    "kind": "palettes",
    "path": "packs/your-name-fabrics-example-palette/rrqlib.json",
    "items": 2,
-   "revision": 3,
+   "revision": 4,
    "sizes": {
     "256": 17858,
     "512": 32356

@@ -1,14 +1,15 @@
 {
  "format": "rrqlib",
- "version": 5,
+ "version": 7,
  "units": "in",
  "kind": "pack",
  "id": "your-name-fabrics-example-palette",
- "revision": 3,
+ "revision": 4,
  "name": "Example Palette",
  "description": "What this library holds.",
  "author": {
-  "name": "Your Name"
+  "name": "Your Name",
+  "url": "https://example.org"
  },
  "license": "CC-BY-SA-4.0",
  "links": {
