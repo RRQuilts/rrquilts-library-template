@@ -4,6 +4,7 @@ on:
     - cron: '0 9 * * 1' # Mondays
   workflow_dispatch:
 permissions:
+  contents: read # needed to check out a private repository
   issues: write
 jobs:
   check:

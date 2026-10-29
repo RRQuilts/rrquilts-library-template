@@ -1,6 +1,7 @@
 name: Gallery site
 # A page showing every fabric and color in the library, on GitHub Pages.
-# Turn on once: Settings › Pages › Source: GitHub Actions.
+# Turn on once: Settings › Pages › Source: GitHub Actions. Until then (or in a private repository
+# without a plan that has Pages) it skips instead of failing.
 on:
   push:
     branches: [main]
@@ -14,6 +15,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   build:
+    if: github.event.repository.has_pages
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
